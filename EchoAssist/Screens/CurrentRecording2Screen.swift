@@ -1,8 +1,8 @@
 //
-//  ContentView.swift
+//  CurrentRecording2Screen.swift
 //  EchoAssist
 //
-//  Created by Ethan Wen on 7/7/26.
+//  The live speech-to-caption recording screen (moved from ContentView).
 //
 
 import AVFAudio
@@ -158,7 +158,7 @@ final class LiveCaptioner {
     }
 }
 
-struct ContentView: View {
+struct CurrentRecording2Screen: View {
     @State private var captioner = LiveCaptioner()
 
     var body: some View {
@@ -249,5 +249,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    CurrentRecording2Screen()
 }
