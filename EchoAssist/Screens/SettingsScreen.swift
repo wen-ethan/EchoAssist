@@ -8,13 +8,6 @@
 import SwiftUI
 
 struct SettingsScreen: View {
-    enum Appearance: String, CaseIterable, Identifiable {
-        case light = "Light Mode"
-        case dark = "Dark Mode"
-        var id: Self { self }
-    }
-
-    @State private var appearance: Appearance = .light
     @State private var hapticsEnabled = true
     @State private var textSize = 2
     var onLogOut: () -> Void = {}
@@ -23,13 +16,6 @@ struct SettingsScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    Picker("Appearance", selection: $appearance) {
-                        ForEach(Appearance.allCases) { mode in
-                            Text(mode.rawValue).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-
                     accountRow
                     hapticsRow
                     textSizeRow
