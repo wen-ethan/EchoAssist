@@ -55,3 +55,4 @@ fastlane/test_output
 # Accio
 Dependencies/
 .accio/
+EchoAssist.xcodeproj/project.pbxproj
