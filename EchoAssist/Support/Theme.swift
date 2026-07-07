@@ -20,8 +20,8 @@ enum EchoPalette {
 }
 
 /// A single line of transcript attributed to a speaker.
-struct SpeakerLine: Identifiable, Hashable {
-    let id = UUID()
+struct SpeakerLine: Identifiable, Hashable, Codable {
+    var id = UUID()
     let speaker: String
     let text: String
 }

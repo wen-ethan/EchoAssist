@@ -8,30 +8,34 @@
 import SwiftUI
 
 struct IndividualRecordingScreen: View {
-    var title: String = "6/2/2026 lecture"
-    var summaryLines: [String] = (1...4).map { "ai generated summary line \($0)" }
-    var lines: [SpeakerLine] = SpeakerLine.samples
+    @Environment(RecordingStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
 
+    @State private var recording: Recording
     @State private var searchTerm = ""
     @State private var language: TranslationLanguage? = .english
+    @State private var isRenaming = false
+    @State private var draftTitle = ""
+    @State private var isConfirmingDelete = false
+
+    init(recording: Recording) {
+        _recording = State(initialValue: recording)
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // AI-generated summary, centered per the mockup.
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(summaryLines, id: \.self) { line in
-                        Text(line)
-                            .font(.system(size: 17))
-                            .foregroundStyle(.black)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 8)
+                Text(recording.summary)
+                    .font(.system(size: 17))
+                    .foregroundStyle(.black)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 8)
 
                 Divider()
 
-                SpeakerTranscriptView(lines: lines)
+                SpeakerTranscriptView(lines: recording.transcript)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
@@ -44,7 +48,7 @@ struct IndividualRecordingScreen: View {
                 .padding(.bottom, 8)
         }
         .searchable(text: $searchTerm, prompt: "Search")
-        .navigationTitle(title)
+        .navigationTitle(recording.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -60,6 +64,6 @@ struct IndividualRecordingScreen: View {
 
 #Preview {
     NavigationStack {
-        IndividualRecordingScreen()
+        IndividualRecordingScreen(recording: Recording.samples[0])
     }
 }
