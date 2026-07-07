@@ -9,6 +9,7 @@
 /* Begin PBXFileReference section */
 		C583B5832FFD4E9700AF57D2 /* EchoAssist.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = EchoAssist.xcodeproj; sourceTree = "<group>"; };
 		EFA125A92FFD451D008E1DC2 /* EchoAssist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EchoAssist.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EFA126042FFD541C008E1DC2 /* EchoAssist.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = EchoAssist.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -48,6 +49,11 @@
 			children = (
 				EFA125A92FFD451D008E1DC2 /* EchoAssist.app */,
 			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EFA126062FFD541C008E1DC2 /* Products */ = {
+			isa = PBXGroup;
 			name = Products;
 			sourceTree = "<group>";
 		};
@@ -107,6 +113,10 @@
 				{
 					ProductGroup = C583B5852FFD4E9700AF57D2 /* Products */;
 					ProjectRef = C583B5832FFD4E9700AF57D2 /* EchoAssist.xcodeproj */;
+				},
+				{
+					ProductGroup = EFA126062FFD541C008E1DC2 /* Products */;
+					ProjectRef = EFA126042FFD541C008E1DC2 /* EchoAssist.xcodeproj */;
 				},
 			);
 			projectRoot = "";
