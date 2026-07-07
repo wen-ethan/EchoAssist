@@ -54,15 +54,6 @@ struct SettingsScreen: View {
             }
             .background(EchoPalette.surface)
             .navigationTitle("Settings")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        // Open menu.
-                    } label: {
-                        Image(systemName: "line.3.horizontal")
-                    }
-                }
-            }
         }
     }
 
