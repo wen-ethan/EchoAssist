@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		C583B5832FFD4E9700AF57D2 /* EchoAssist.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = EchoAssist.xcodeproj; sourceTree = "<group>"; };
 		EFA125A92FFD451D008E1DC2 /* EchoAssist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EchoAssist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -29,6 +30,11 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C583B5852FFD4E9700AF57D2 /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
 		EFA125A02FFD451D008E1DC2 = {
 			isa = PBXGroup;
 			children = (
@@ -97,6 +103,12 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EFA125AA2FFD451D008E1DC2 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = C583B5852FFD4E9700AF57D2 /* Products */;
+					ProjectRef = C583B5832FFD4E9700AF57D2 /* EchoAssist.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				EFA125A82FFD451D008E1DC2 /* EchoAssist */,
