@@ -13,6 +13,7 @@ struct IndividualRecordingScreen: View {
     var lines: [SpeakerLine] = SpeakerLine.samples
 
     @State private var searchTerm = ""
+    @State private var language: TranslationLanguage? = .english
 
     var body: some View {
         ScrollView {
@@ -36,6 +37,12 @@ struct IndividualRecordingScreen: View {
             .padding(.bottom, 24)
         }
         .background(EchoPalette.surface)
+        .safeAreaInset(edge: .bottom) {
+            TranslationWidget(language: $language)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 8)
+        }
         .searchable(text: $searchTerm, prompt: "Search")
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
