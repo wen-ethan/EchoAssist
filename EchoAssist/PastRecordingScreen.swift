@@ -7,16 +7,6 @@
 
 import SwiftUI
 
-// MARK: - Design tokens
-
-/// Colors pulled from the Figma variables for the Past Recording screen.
-private enum EchoPalette {
-    /// Schemes/Surface — the screen background.
-    static let surface = Color(red: 0xFE / 255, green: 0xF7 / 255, blue: 0xFF / 255)
-    /// Fills/Secondary — card backgrounds (translucent gray).
-    static let fillSecondary = Color(.sRGB, red: 120 / 255, green: 120 / 255, blue: 128 / 255, opacity: 0.16)
-}
-
 // MARK: - Model
 
 /// A single past recording shown in the list.
@@ -59,10 +49,14 @@ struct PastRecordingScreen: View {
     var body: some View {
         NavigationStack {
             List(filteredRecordings) { recording in
-                RecordingRow(recording: recording)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 7, leading: 24, bottom: 7, trailing: 24))
-                    .listRowBackground(Color.clear)
+                NavigationLink {
+                    IndividualRecordingScreen(title: recording.title)
+                } label: {
+                    RecordingRow(recording: recording)
+                }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 7, leading: 24, bottom: 7, trailing: 24))
+                .listRowBackground(Color.clear)
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
@@ -95,33 +89,8 @@ private struct RecordingRow: View {
     }
 }
 
-// MARK: - Tab container
+// MARK: - Preview
 
-/// Hosts the app's tabs; the native tab bar matches the Figma design.
-struct MainTabView: View {
-    var body: some View {
-        TabView {
-            Tab("Menu", systemImage: "line.3.horizontal") {
-                Text("Menu")
-            }
-
-            Tab("Recording", systemImage: "record.circle") {
-                Text("Recording")
-            }
-
-            Tab("Past Recordings", systemImage: "waveform") {
-                PastRecordingScreen()
-            }
-        }
-    }
-}
-
-// MARK: - Previews
-
-#Preview("Past Recordings") {
+#Preview {
     PastRecordingScreen()
-}
-
-#Preview("In Tab Bar") {
-    MainTabView()
 }
