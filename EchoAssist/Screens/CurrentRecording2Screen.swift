@@ -188,7 +188,7 @@ struct CurrentRecording2Screen: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground)
+                EchoPalette.surface
                     .ignoresSafeArea()
 
                 VStack(spacing: 18) {
@@ -218,12 +218,13 @@ struct CurrentRecording2Screen: View {
         HStack(spacing: 12) {
             Image(systemName: captioner.isListening ? "waveform.circle.fill" : "waveform.circle")
                 .font(.system(size: 42))
-                .foregroundStyle(captioner.isListening ? .green : .secondary)
+                .foregroundStyle(captioner.isListening ? EchoPalette.primary : .secondary)
                 .symbolEffect(.pulse, isActive: captioner.isListening)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(captioner.isListening ? "Live captions on" : "Live captions off")
                     .font(.headline)
+                    .foregroundStyle(.black)
                 Text(captioner.statusMessage)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -233,7 +234,7 @@ struct CurrentRecording2Screen: View {
             Spacer()
         }
         .padding(16)
-        .background(.background, in: RoundedRectangle(cornerRadius: 8))
+        .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private var captionDisplay: some View {
@@ -242,7 +243,7 @@ struct CurrentRecording2Screen: View {
                 Text(captioner.hasTranscript ? captioner.transcript : "Tap the microphone to start live captions.")
                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                     .lineSpacing(8)
-                    .foregroundStyle(captioner.hasTranscript ? .primary : .secondary)
+                    .foregroundStyle(captioner.hasTranscript ? .black : .secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentTransition(.opacity)
 
@@ -255,7 +256,7 @@ struct CurrentRecording2Screen: View {
             .padding(20)
             .frame(maxWidth: .infinity, minHeight: 360, alignment: .topLeading)
         }
-        .background(.background, in: RoundedRectangle(cornerRadius: 8))
+        .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private var controls: some View {
@@ -267,7 +268,7 @@ struct CurrentRecording2Screen: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
-        .tint(captioner.isListening ? .red : .green)
+        .tint(captioner.isListening ? .red : EchoPalette.primary)
     }
 }
 
