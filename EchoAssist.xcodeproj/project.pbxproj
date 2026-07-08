@@ -6,8 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EF90811E2FFEB635005A3F44 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = EF90811D2FFEB635005A3F44 /* FluidAudio */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		C583B5832FFD4E9700AF57D2 /* EchoAssist.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = EchoAssist.xcodeproj; sourceTree = "<group>"; };
+		EF90810A2FFEB3A8005A3F44 /* EchoAssist.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = EchoAssist.xcodeproj; sourceTree = "<group>"; };
 		EFA125A92FFD451D008E1DC2 /* EchoAssist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EchoAssist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFA126042FFD541C008E1DC2 /* EchoAssist.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = EchoAssist.xcodeproj; sourceTree = "<group>"; };
 		EFA126552FFD84E3008E1DC2 /* EchoAssist.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = EchoAssist.xcodeproj; sourceTree = "<group>"; };
@@ -26,6 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EF90811E2FFEB635005A3F44 /* FluidAudio in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +39,11 @@
 
 /* Begin PBXGroup section */
 		C583B5852FFD4E9700AF57D2 /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EF90810B2FFEB3A8005A3F44 /* Products */ = {
 			isa = PBXGroup;
 			name = Products;
 			sourceTree = "<group>";
@@ -83,6 +94,7 @@
 			);
 			name = EchoAssist;
 			packageProductDependencies = (
+				EF90811D2FFEB635005A3F44 /* FluidAudio */,
 			);
 			productName = EchoAssist;
 			productReference = EFA125A92FFD451D008E1DC2 /* EchoAssist.app */;
@@ -112,6 +124,9 @@
 			);
 			mainGroup = EFA125A02FFD451D008E1DC2;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EF90811C2FFEB635005A3F44 /* XCRemoteSwiftPackageReference "FluidAudio" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EFA125AA2FFD451D008E1DC2 /* Products */;
 			projectDirPath = "";
@@ -127,6 +142,10 @@
 				{
 					ProductGroup = EFA126562FFD84E3008E1DC2 /* Products */;
 					ProjectRef = EFA126552FFD84E3008E1DC2 /* EchoAssist.xcodeproj */;
+				},
+				{
+					ProductGroup = EF90810B2FFEB3A8005A3F44 /* Products */;
+					ProjectRef = EF90810A2FFEB3A8005A3F44 /* EchoAssist.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -286,14 +305,14 @@
 				DEVELOPMENT_TEAM = TQ4LF5RV5S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "EchoAssist uses the microphone to record and transcribe your lectures and conversations.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "EchoAssist uses speech recognition to transcribe your recordings into live captions.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "EchoAssist uses the microphone to record and transcribe your lectures and conversations.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "EchoAssist uses speech recognition to transcribe your recordings into live captions.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -321,14 +340,14 @@
 				DEVELOPMENT_TEAM = TQ4LF5RV5S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "EchoAssist uses the microphone to record and transcribe your lectures and conversations.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "EchoAssist uses speech recognition to transcribe your recordings into live captions.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "EchoAssist uses the microphone to record and transcribe your lectures and conversations.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "EchoAssist uses speech recognition to transcribe your recordings into live captions.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -368,6 +387,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EF90811C2FFEB635005A3F44 /* XCRemoteSwiftPackageReference "FluidAudio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/FluidInference/FluidAudio.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EF90811D2FFEB635005A3F44 /* FluidAudio */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EF90811C2FFEB635005A3F44 /* XCRemoteSwiftPackageReference "FluidAudio" */;
+			productName = FluidAudio;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EFA125A12FFD451D008E1DC2 /* Project object */;
 }

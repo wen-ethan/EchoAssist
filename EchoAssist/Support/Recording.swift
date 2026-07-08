@@ -37,27 +37,25 @@ struct Recording: Identifiable, Hashable, Codable {
 }
 
 extension Recording {
-    /// Seed content used the first time the app launches.
+    /// Seed content used the first time the app launches: a friendly onboarding note.
     static let samples: [Recording] = [
         Recording(
-            title: "6/2/2026 lecture",
-            summary: "ai generated summary line 1\nai generated summary line 2",
-            transcript: SpeakerLine.samples
-        ),
-        Recording(
-            title: "5/28/2026 lecture",
-            summary: "ai generated summary line 1\nai generated summary line 2",
-            transcript: SpeakerLine.samples
-        ),
-        Recording(
-            title: "5/21/2026 lecture",
-            summary: "ai generated summary line 1\nai generated summary line 2",
-            transcript: SpeakerLine.samples
-        ),
-        Recording(
-            title: "5/14/2026 lecture",
-            summary: "ai generated summary line 1\nai generated summary line 2",
-            transcript: SpeakerLine.samples
+            title: "Welcome to EchoAssist 👋",
+            summary: "Tap Recording to start live captions. When you stop, your transcript is saved here automatically.",
+            transcript: [
+                SpeakerLine(
+                    speaker: "EchoAssist",
+                    text: "Welcome! EchoAssist turns speech into live captions and keeps a searchable transcript of every session."
+                ),
+                SpeakerLine(
+                    speaker: "Getting started",
+                    text: "Open the Recording tab and tap Start. When you tap Stop, the transcript is saved to Past Recordings automatically."
+                ),
+                SpeakerLine(
+                    speaker: "Tips",
+                    text: "Open any recording to rename it, share the text, or delete it from the menu in the top-right corner."
+                ),
+            ]
         ),
     ]
 }
