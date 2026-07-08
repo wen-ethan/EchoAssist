@@ -159,7 +159,31 @@ final class LiveCaptioner {
 }
 
 struct CurrentRecording2Screen: View {
+    @Environment(RecordingStore.self) private var store
     @State private var captioner = LiveCaptioner()
+    @State private var showSavedAlert = false
+
+    /// Saves the current captioned text as a new recording, confirms with a
+    /// popup, then clears the transcript after a short delay.
+    private func saveRecording() {
+        let text = captioner.transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+
+        let recording = Recording(
+            title: Date.now.formatted(date: .numeric, time: .shortened),
+            summary: "AI-generated summary pending.",
+            transcript: [SpeakerLine(speaker: "Speaker 1", text: text)]
+        )
+        store.add(recording)
+        captioner.statusMessage = "Saved to Past Recordings."
+        showSavedAlert = true
+
+        // Keep the transcript on screen briefly, then clear it.
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            captioner.clearTranscript()
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -176,6 +200,17 @@ struct CurrentRecording2Screen: View {
             }
             .navigationTitle("EchoAssist")
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: captioner.isListening) { _, isListening in
+                // When a recording stops, automatically save the transcript.
+                if !isListening {
+                    saveRecording()
+                }
+            }
+            .alert("Recording Saved", isPresented: $showSavedAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Your recording was added to Past Recordings.")
+            }
         }
     }
 
@@ -224,30 +259,19 @@ struct CurrentRecording2Screen: View {
     }
 
     private var controls: some View {
-        HStack(spacing: 12) {
-            Button {
-                captioner.toggleListening()
-            } label: {
-                Label(captioner.isListening ? "Stop" : "Start", systemImage: captioner.isListening ? "stop.fill" : "mic.fill")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .tint(captioner.isListening ? .red : .green)
-
-            Button {
-                captioner.clearTranscript()
-            } label: {
-                Label("Clear", systemImage: "trash")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-            .disabled(!captioner.hasTranscript)
+        Button {
+            captioner.toggleListening()
+        } label: {
+            Label(captioner.isListening ? "Stop" : "Start", systemImage: captioner.isListening ? "stop.fill" : "mic.fill")
+                .frame(maxWidth: .infinity)
         }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .tint(captioner.isListening ? .red : .green)
     }
 }
 
 #Preview {
     CurrentRecording2Screen()
+        .environment(RecordingStore())
 }

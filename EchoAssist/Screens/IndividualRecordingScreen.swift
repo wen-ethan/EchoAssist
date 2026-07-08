@@ -22,6 +22,13 @@ struct IndividualRecordingScreen: View {
         _recording = State(initialValue: recording)
     }
 
+    /// Plain-text export of the recording: title, summary, and full transcript.
+    private var exportText: String {
+        var lines = [recording.title, "", recording.summary, ""]
+        lines += recording.transcript.map { "\($0.speaker): \($0.text)" }
+        return lines.joined(separator: "\n")
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -53,6 +60,13 @@ struct IndividualRecordingScreen: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
+                    ShareLink(
+                        item: exportText,
+                        preview: SharePreview(recording.title)
+                    ) {
+                        Label("Export as Text", systemImage: "square.and.arrow.up")
+                    }
+
                     Button {
                         draftTitle = recording.title
                         isRenaming = true
