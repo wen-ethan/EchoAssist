@@ -52,12 +52,44 @@ struct IndividualRecordingScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    // Settings for this recording.
+                Menu {
+                    Button {
+                        draftTitle = recording.title
+                        isRenaming = true
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+
+                    Button(role: .destructive) {
+                        isConfirmingDelete = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 } label: {
                     Image(systemName: "gearshape")
                 }
             }
+        }
+        .alert("Rename Recording", isPresented: $isRenaming) {
+            TextField("Title", text: $draftTitle)
+            Button("Cancel", role: .cancel) {}
+            Button("Save") {
+                let trimmed = draftTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return }
+                recording.title = trimmed
+                store.update(recording)
+            }
+        }
+        .confirmationDialog(
+            "Delete this recording?",
+            isPresented: $isConfirmingDelete,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                store.delete(recording)
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
         }
     }
 }
