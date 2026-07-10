@@ -75,8 +75,19 @@ final class LiveCaptioner {
             recognitionRequest = request
 
             let inputNode = audioEngine.inputNode
-            let recordingFormat = inputNode.outputFormat(forBus: 0)
             inputNode.removeTap(onBus: 0)
+            let recordingFormat = inputNode.outputFormat(forBus: 0)
+
+            // A sample rate or channel count of 0 means no usable microphone is
+            // available yet (e.g. iOS Simulator, or before the session settles).
+            // Installing a tap with such a format crashes AVAudioEngine, so bail
+            // out gracefully instead.
+            guard recordingFormat.sampleRate > 0, recordingFormat.channelCount > 0 else {
+                statusMessage = "No microphone input available. Connect a mic and make sure access is granted."
+                finishRecognitionSession()
+                return
+            }
+
             inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
                 request.append(buffer)
             }
