@@ -22,7 +22,7 @@ struct ContentView: View {
             }
 
             Tab("Recording", systemImage: "record.circle", value: .recording) {
-                CurrentRecording2Screen()
+                CurrentRecordingScreen()
             }
 
             Tab("Past Recordings", systemImage: "waveform", value: .pastRecordings) {
