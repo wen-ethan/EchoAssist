@@ -8,6 +8,7 @@
 //
 
 import AVFAudio
+import FluidAudio
 import SwiftUI
 
 @MainActor
@@ -23,6 +24,10 @@ final class LiveCaptioner {
     private(set) var pendingLine = ""
     var statusMessage = "Ready to caption nearby speech."
     var isListening = false
+    /// True while the speech models are downloading/compiling after a Start
+    /// tap. The Start button is disabled while this is set, and the guard in
+    /// `startListening` makes a second tap a no-op regardless.
+    private(set) var isPreparingModels = false
     var lastUpdated = Date.now
 
     private let audioEngine = AVAudioEngine()
@@ -76,7 +81,7 @@ final class LiveCaptioner {
     }
 
     private func startListening() async {
-        guard !audioEngine.isRunning, !isStopping else { return }
+        guard !audioEngine.isRunning, !isStopping, !isPreparingModels else { return }
 
         let canUseMicrophone = await AVAudioApplication.requestRecordPermission()
         guard canUseMicrophone else {
@@ -102,15 +107,28 @@ final class LiveCaptioner {
         )
 
         if !modelsReady {
-            statusMessage = "Downloading on-device speech models…"
+            let downloads = ModelDownloadCenter.shared
+            downloads.refreshFromDisk()
+            // Downloads happen up front (via the Download Models button or
+            // Settings), never as a side effect of Start — so a session only
+            // ever pays the load/compile cost here, not an 800 MB fetch.
+            guard downloads.allDownloaded else {
+                statusMessage = "Download the speech models first to start captioning."
+                return
+            }
+            isPreparingModels = true
+            statusMessage = "Preparing speech models…"
+            defer { isPreparingModels = false }
             do {
-                try await pipeline.prepare { [weak self] message in
-                    Task { @MainActor [weak self] in
-                        self?.statusMessage = message
+                try await pipeline.prepare { model, progress in
+                    Task { @MainActor in
+                        ModelDownloadCenter.shared.apply(progress, to: model)
                     }
                 }
                 modelsReady = true
+                ModelDownloadCenter.shared.noteDownloadsSettled()
             } catch {
+                ModelDownloadCenter.shared.noteDownloadFailed(error.localizedDescription)
                 statusMessage = "Could not load speech models: \(error.localizedDescription)"
                 return
             }
@@ -181,6 +199,7 @@ struct CurrentRecordingScreen: View {
     @Environment(RecordingStore.self) private var store
     @State private var captioner = LiveCaptioner()
     @State private var showSavedAlert = false
+    private let downloads = ModelDownloadCenter.shared
 
     /// Saves the captioned lines as a new recording, confirms with a
     /// popup, then clears the transcript after a short delay.
@@ -229,7 +248,17 @@ struct CurrentRecordingScreen: View {
             } message: {
                 Text("Your recording was added to Past Recordings.")
             }
+            .sheet(isPresented: firstRunExplainerShown) {
+                InitialModelDownloadSheet()
+            }
         }
+    }
+
+    private var firstRunExplainerShown: Binding<Bool> {
+        Binding(
+            get: { downloads.showFirstRunExplainer },
+            set: { downloads.showFirstRunExplainer = $0 }
+        )
     }
 
     private var header: some View {
@@ -243,7 +272,7 @@ struct CurrentRecordingScreen: View {
                 Text(captioner.isListening ? "Live captions on" : "Live captions off")
                     .font(.headline)
                     .foregroundStyle(.black)
-                Text(captioner.statusMessage)
+                Text(headerStatus)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
@@ -253,6 +282,22 @@ struct CurrentRecordingScreen: View {
         }
         .padding(16)
         .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    /// The header line tracks the captioner while a session is live or
+    /// spinning up; outside of that, the download state takes priority so
+    /// "Ready to caption" never shows before the models exist.
+    private var headerStatus: String {
+        if captioner.isListening || captioner.isPreparingModels {
+            return captioner.statusMessage
+        }
+        if downloads.isDownloading {
+            return "Downloading speech models…"
+        }
+        if !downloads.allDownloaded {
+            return "One-time model download needed before captioning."
+        }
+        return captioner.statusMessage
     }
 
     private var hasAnyCaption: Bool {
@@ -303,16 +348,56 @@ struct CurrentRecordingScreen: View {
         .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 20))
     }
 
+    /// The one primary button, by state: Stop while listening; a locked
+    /// spinner while models download or compile; Download Models until the
+    /// one-time download has happened; Start only once the models are ready.
+    @ViewBuilder
     private var controls: some View {
-        Button {
-            captioner.toggleListening()
-        } label: {
-            Label(captioner.isListening ? "Stop" : "Start", systemImage: captioner.isListening ? "stop.fill" : "mic.fill")
+        if captioner.isListening {
+            actionButton("Stop", icon: "stop.fill", tint: .red) {
+                captioner.toggleListening()
+            }
+        } else if captioner.isPreparingModels {
+            lockedButton("Preparing speech models…")
+        } else if downloads.isDownloading {
+            lockedButton("Downloading models…")
+        } else if !downloads.allDownloaded {
+            actionButton("Download Models", icon: "arrow.down.circle.fill", tint: EchoPalette.primary) {
+                downloads.showFirstRunExplainer = true
+            }
+        } else {
+            actionButton("Start", icon: "mic.fill", tint: EchoPalette.primary) {
+                captioner.toggleListening()
+            }
+        }
+    }
+
+    private func actionButton(
+        _ title: String, icon: String, tint: Color, action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
-        .tint(captioner.isListening ? .red : EchoPalette.primary)
+        .tint(tint)
+    }
+
+    private func lockedButton(_ title: String) -> some View {
+        Button {
+        } label: {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(title)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .tint(EchoPalette.primary)
+        .disabled(true)
     }
 }
 

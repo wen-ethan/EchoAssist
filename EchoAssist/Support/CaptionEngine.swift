@@ -337,12 +337,16 @@ actor CaptionPipeline {
     /// than the 320 ms tier — much lighter on the battery. If captions feel
     /// laggy try `(leftFrames: 70, chunkFrames: 2, rightFrames: 2)` (320 ms);
     /// if accuracy matters most try `(70, 7, 7)` (1120 ms).
-    private static let asrConfig = UnifiedConfig(leftFrames: 70, chunkFrames: 7, rightFrames: 1)
+    /// (Internal, not private: ModelDownloadCenter derives the on-disk cache
+    /// paths for this exact config.)
+    static let asrConfig = UnifiedConfig(leftFrames: 70, chunkFrames: 7, rightFrames: 1)
 
     /// Sortformer "NVIDIA low latency" v2.1: ~1s output latency with a larger
     /// FIFO buffer than the fast preset, which improves who-said-what accuracy
     /// at the same latency. Tracks up to 4 concurrent speakers.
-    private static let diarizerConfig = SortformerConfig.balancedV2_1
+    /// (Internal, not private: ModelDownloadCenter derives the on-disk cache
+    /// paths for this exact config.)
+    static let diarizerConfig = SortformerConfig.balancedV2_1
 
     /// Seconds per diarizer output frame (80 ms) — converts the diarizer's
     /// frame counts into the shared session clock.
@@ -375,17 +379,21 @@ actor CaptionPipeline {
 
     /// Downloads (first run only) and loads both models, in parallel.
     /// ~800 MB total on first run; cached under Application Support after.
-    func prepare(onProgress: @escaping @Sendable (String) -> Void) async throws {
+    /// Each model's download/compile progress flows to `onProgress` (called
+    /// on arbitrary threads — hop to the main actor before touching UI).
+    func prepare(
+        onProgress: @escaping @Sendable (SpeechModel, DownloadProgress) -> Void
+    ) async throws {
         guard asr == nil || diarizer == nil else { return }
 
         let asrManager = StreamingUnifiedAsrManager(config: Self.asrConfig)
         async let asrLoad: Void = asrManager.loadModels(to: nil, configuration: nil) { progress in
-            onProgress("Downloading transcriber… \(Int(progress.fractionCompleted * 100))%")
+            onProgress(.transcriber, progress)
         }
         async let diarizerModels = SortformerModels.loadFromHuggingFace(
             config: Self.diarizerConfig
         ) { progress in
-            onProgress("Downloading speaker identifier… \(Int(progress.fractionCompleted * 100))%")
+            onProgress(.speakerIdentifier, progress)
         }
 
         try await asrLoad

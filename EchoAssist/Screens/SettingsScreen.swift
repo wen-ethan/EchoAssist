@@ -11,12 +11,14 @@ struct SettingsScreen: View {
     @State private var hapticsEnabled = true
     @State private var textSize = 2
     var onLogOut: () -> Void = {}
+    private let downloads = ModelDownloadCenter.shared
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     accountRow
+                    speechModelsRow
                     hapticsRow
                     textSizeRow
                     exampleBox
@@ -61,6 +63,34 @@ struct SettingsScreen: View {
                 .frame(width: 48, height: 48)
                 .foregroundStyle(EchoPalette.primary)
         }
+    }
+
+    private var speechModelsRow: some View {
+        NavigationLink {
+            ModelDownloadsScreen()
+        } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Speech Models")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.black)
+                    Text(downloads.overallSummary)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                if downloads.isDownloading {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .onAppear { downloads.refreshFromDisk() }
     }
 
     private var hapticsRow: some View {
