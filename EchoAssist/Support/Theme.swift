@@ -22,7 +22,9 @@ enum EchoPalette {
 /// A single line of transcript attributed to a speaker.
 struct SpeakerLine: Identifiable, Hashable, Codable {
     var id = UUID()
-    let speaker: String
+    /// The diarizer names speakers "Speaker 1", "Speaker 2"…; the user can
+    /// rename them afterwards from the recording's menu.
+    var speaker: String
     let text: String
 }
 
