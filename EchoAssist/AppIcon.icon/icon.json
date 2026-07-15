@@ -4,65 +4,20 @@
   },
   "groups" : [
     {
-      "blur-material" : null,
       "layers" : [
         {
-          "blend-mode" : "normal",
-          "fill" : {
-            "linear-gradient" : [
-              "srgb:0.85758,0.87698,1.00000,1.00000",
-              "srgb:0.85758,0.85351,1.00000,1.00000"
-            ],
-            "orientation" : {
-              "start" : {
-                "x" : 0.5,
-                "y" : 1
-              },
-              "stop" : {
-                "x" : 0.5,
-                "y" : 0.3
-              }
-            }
-          },
-          "glass" : true,
-          "hidden" : false,
-          "image-name" : "25917.svg",
-          "name" : "25917",
-          "position" : {
-            "scale" : 0.5,
-            "translation-in-points" : [
-              132.6875,
-              -38.234375
-            ]
-          }
+          "image-name" : "3-Microphone.svg",
+          "name" : "3-Microphone"
         },
         {
-          "fill-specializations" : [
-            {
-              "appearance" : "dark",
-              "value" : {
-                "automatic-gradient" : "srgb:0.95864,0.96500,1.00000,1.00000"
-              }
-            }
-          ],
-          "image-name" : "157352.svg",
-          "name" : "157352",
-          "position" : {
-            "scale" : 0.5,
-            "translation-in-points" : [
-              -104.85800349945885,
-              99.46875
-            ]
-          }
+          "image-name" : "2-Speaker2-Ripples.svg",
+          "name" : "2-Speaker2-Ripples"
+        },
+        {
+          "image-name" : "1-Speaker1-Ripples.svg",
+          "name" : "1-Speaker1-Ripples"
         }
       ],
-      "position" : {
-        "scale" : 0.9,
-        "translation-in-points" : [
-          0,
-          0
-        ]
-      },
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.5
@@ -74,8 +29,9 @@
     }
   ],
   "supported-platforms" : {
-    "squares" : [
-      "iOS"
-    ]
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
   }
 }
