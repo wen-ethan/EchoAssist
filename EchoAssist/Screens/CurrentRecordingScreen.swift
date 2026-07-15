@@ -206,12 +206,18 @@ struct CurrentRecordingScreen: View {
     private func saveRecording() {
         guard !captioner.lines.isEmpty else { return }
 
+        let canSummarize = TranscriptSummarizer.isAvailable
         let recording = Recording(
             title: Date.now.formatted(date: .numeric, time: .shortened),
-            summary: "AI-generated summary pending.",
+            summary: canSummarize
+                ? "Generating summary…"
+                : TranscriptSummarizer.snippet(for: captioner.lines),
             transcript: captioner.lines
         )
         store.add(recording)
+        if canSummarize {
+            summarize(recording)
+        }
         captioner.statusMessage = "Saved to Past Recordings."
         showSavedAlert = true
 
@@ -219,6 +225,23 @@ struct CurrentRecordingScreen: View {
         Task {
             try? await Task.sleep(for: .seconds(3))
             captioner.clearTranscript()
+        }
+    }
+
+    /// Generates the AI summary in the background and swaps it into the
+    /// saved recording once it lands. Re-fetches by id so a rename (or
+    /// delete) that happened while the model was thinking isn't clobbered.
+    private func summarize(_ recording: Recording) {
+        Task {
+            let summary: String
+            do {
+                summary = try await TranscriptSummarizer.summarize(recording.transcript)
+            } catch {
+                summary = TranscriptSummarizer.snippet(for: recording.transcript)
+            }
+            guard var latest = store.recording(id: recording.id) else { return }
+            latest.summary = summary
+            store.update(latest)
         }
     }
 
