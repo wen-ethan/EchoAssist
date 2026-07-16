@@ -28,16 +28,6 @@ struct SpeakerLine: Identifiable, Hashable, Codable {
     let text: String
 }
 
-extension SpeakerLine {
-    /// Placeholder transcript matching the Figma mockups.
-    static let samples: [SpeakerLine] = [
-        SpeakerLine(speaker: "Speaker 1", text: "dsfkjsdklfjsdlkfjsdfjsdlk"),
-        SpeakerLine(speaker: "Speaker 2", text: "dsfkjsdklfjsdlkfjsdfjsdlk"),
-        SpeakerLine(speaker: "Speaker 1", text: "dsfkjsdklfjsdlkfjsdfjsdlk"),
-        SpeakerLine(speaker: "Speaker 2", text: "dsfkjsdklfjsdlkfjsdfjsdlk fdklsdjflkjsdfkdsklfjdslkfdsjl;fsdf"),
-    ]
-}
-
 /// Renders a speaker-labeled transcript (bold speaker name + regular body).
 struct SpeakerTranscriptView: View {
     let lines: [SpeakerLine]
@@ -50,8 +40,8 @@ struct SpeakerTranscriptView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             ForEach(Array(zip(lines, firstOrdinals)), id: \.0.id) { line, firstOrdinal in
-                (Text("\(line.speaker): ").bold()
-                    + Text(highlighted(line.text, firstOrdinal: firstOrdinal)))
+                let speaker = Text("\(line.speaker): ").bold()
+                Text("\(speaker)\(highlighted(line.text, firstOrdinal: firstOrdinal))")
                     .font(.body)
                     .foregroundStyle(.black)
                     .fixedSize(horizontal: false, vertical: true)

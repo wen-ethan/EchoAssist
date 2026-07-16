@@ -356,10 +356,11 @@ struct CurrentRecordingScreen: View {
                     // not-yet-attributed tail appended in a lighter shade so
                     // new speech appears instantly and "solidifies" in place.
                     if let open = captioner.openBlock {
-                        (Text("\(open.speaker): ").bold().foregroundStyle(.black)
-                            + Text(open.text).foregroundStyle(.black)
-                            + Text(captioner.pendingLine.isEmpty ? "" : " \(captioner.pendingLine)")
-                                .foregroundStyle(.secondary))
+                        let speaker = Text("\(open.speaker): ").bold().foregroundStyle(.black)
+                        let spoken = Text(open.text).foregroundStyle(.black)
+                        let pending = Text(captioner.pendingLine.isEmpty ? "" : " \(captioner.pendingLine)")
+                            .foregroundStyle(.secondary)
+                        Text("\(speaker)\(spoken)\(pending)")
                             .font(.body)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)
