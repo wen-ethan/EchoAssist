@@ -36,6 +36,9 @@ final class LiveCaptioner {
     private var audioTask: Task<Void, Never>?
     private var modelsReady = false
     private var isStopping = false
+    /// Speaker of the most recent attributed block, used to detect switches
+    /// so a haptic fires only on an actual change of speaker.
+    private var lastSpeaker: String?
 
     var hasTranscript: Bool {
         !lines.isEmpty
@@ -55,6 +58,7 @@ final class LiveCaptioner {
         lines = []
         openBlock = nil
         pendingLine = ""
+        lastSpeaker = nil
         statusMessage = isListening ? "Listening..." : "Ready to caption nearby speech."
     }
 
@@ -92,9 +96,17 @@ final class LiveCaptioner {
         await pipeline.setHandlers(
             live: { [weak self] block, pending in
                 Task { @MainActor [weak self] in
-                    self?.openBlock = block
-                    self?.pendingLine = pending
-                    self?.lastUpdated = .now
+                    guard let self else { return }
+                    if let speaker = block?.speaker, speaker != self.lastSpeaker {
+                        // The first speaker of a session isn't a switch.
+                        if self.lastSpeaker != nil {
+                            Haptics.speakerChanged()
+                        }
+                        self.lastSpeaker = speaker
+                    }
+                    self.openBlock = block
+                    self.pendingLine = pending
+                    self.lastUpdated = .now
                 }
             },
             blockClosed: { [weak self] block in
@@ -137,6 +149,7 @@ final class LiveCaptioner {
         do {
             try configureAudioSession()
             await pipeline.resetSession()
+            lastSpeaker = nil
 
             let inputNode = audioEngine.inputNode
 

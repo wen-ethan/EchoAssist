@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Translation
 
 struct IndividualRecordingScreen: View {
     @Environment(RecordingStore.self) private var store
@@ -14,6 +15,13 @@ struct IndividualRecordingScreen: View {
     @State private var recording: Recording
     @State private var searchTerm = ""
     @State private var language: TranslationLanguage? = .english
+    @State private var translationConfig: TranslationSession.Configuration?
+    /// Finished translations, kept for this visit so re-picking a language
+    /// is instant. The transcript itself never changes after recording, so
+    /// entries never go stale.
+    @State private var translations: [TranslationLanguage: [SpeakerLine]] = [:]
+    @State private var isTranslating = false
+    @State private var translationError: String?
     @State private var isRenaming = false
     @State private var draftTitle = ""
     @State private var isConfirmingDelete = false
@@ -28,6 +36,14 @@ struct IndividualRecordingScreen: View {
         var lines = [recording.title, "", recording.summary, ""]
         lines += recording.transcript.map { "\($0.speaker): \($0.text)" }
         return lines.joined(separator: "\n")
+    }
+
+    /// The transcript in the selected language. The recording is captioned
+    /// in English, so English (or no selection) shows the original; other
+    /// languages show their cached translation once it lands.
+    private var displayedTranscript: [SpeakerLine] {
+        guard let language, language != .english else { return recording.transcript }
+        return translations[language] ?? recording.transcript
     }
 
     /// The transcript's distinct speakers, in order of first appearance.
@@ -60,17 +76,32 @@ struct IndividualRecordingScreen: View {
 
                 Divider()
 
-                SpeakerTranscriptView(lines: recording.transcript)
+                SpeakerTranscriptView(lines: displayedTranscript)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }
         .background(EchoPalette.surface)
         .safeAreaInset(edge: .bottom) {
-            TranslationWidget(language: $language)
+            TranslationWidget(language: $language, isTranslating: isTranslating)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 8)
+        }
+        .onChange(of: language) { _, selected in
+            guard let selected, selected != .english, translations[selected] == nil else { return }
+            let target = selected.locale
+            if translationConfig?.target == target {
+                // Same pair as a previous (failed) attempt: a fresh session
+                // only starts if the configuration is invalidated.
+                translationConfig?.invalidate()
+            } else {
+                translationConfig = TranslationSession.Configuration(
+                    source: Locale.Language(identifier: "en"), target: target)
+            }
+        }
+        .translationTask(translationConfig) { session in
+            await translateTranscript(with: session)
         }
         .searchable(text: $searchTerm, prompt: "Search")
         .navigationTitle(recording.title)
@@ -105,7 +136,7 @@ struct IndividualRecordingScreen: View {
                         Label("Delete Recording", systemImage: "trash")
                     }
                 } label: {
-                    Image(systemName: "gearshape")
+                    Image(systemName: "ellipsis.circle")
                 }
             }
         }
@@ -132,6 +163,42 @@ struct IndividualRecordingScreen: View {
         }
         .sheet(isPresented: $isRenamingSpeakers) {
             SpeakerRenameSheet(speakers: speakers, onSave: renameSpeakers)
+        }
+        .alert(
+            "Translation Failed",
+            isPresented: Binding(
+                get: { translationError != nil },
+                set: { if !$0 { translationError = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(translationError ?? "")
+        }
+    }
+
+    /// Batch-translates every transcript line into the selected language and
+    /// caches the result. Speaker names stay untranslated; only the spoken
+    /// text goes through the session.
+    private func translateTranscript(with session: TranslationSession) async {
+        guard let target = language, target != .english else { return }
+        isTranslating = true
+        defer { isTranslating = false }
+        do {
+            let requests = recording.transcript.enumerated().map { index, line in
+                TranslationSession.Request(
+                    sourceText: line.text, clientIdentifier: String(index))
+            }
+            var lines = recording.transcript
+            for response in try await session.translations(from: requests) {
+                guard let id = response.clientIdentifier, let index = Int(id) else { continue }
+                lines[index] = SpeakerLine(
+                    speaker: lines[index].speaker, text: response.targetText)
+            }
+            translations[target] = lines
+        } catch {
+            translationError = error.localizedDescription
+            language = .english
         }
     }
 }

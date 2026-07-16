@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SettingsScreen: View {
-    @State private var hapticsEnabled = true
+    @AppStorage("hapticsEnabled") private var hapticsEnabled = true
     @State private var textSize = 2
     var onLogOut: () -> Void = {}
     private let downloads = ModelDownloadCenter.shared

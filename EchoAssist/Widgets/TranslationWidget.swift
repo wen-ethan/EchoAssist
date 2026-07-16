@@ -18,6 +18,20 @@ enum TranslationLanguage: String, CaseIterable, Identifiable {
     case korean = "Korean"
 
     var id: Self { self }
+
+    /// Language tag handed to the Translation framework when this language
+    /// is the translation target.
+    var locale: Locale.Language {
+        switch self {
+        case .english: Locale.Language(identifier: "en")
+        case .spanish: Locale.Language(identifier: "es")
+        case .french: Locale.Language(identifier: "fr")
+        case .german: Locale.Language(identifier: "de")
+        case .mandarin: Locale.Language(identifier: "zh-Hans")
+        case .japanese: Locale.Language(identifier: "ja")
+        case .korean: Locale.Language(identifier: "ko")
+        }
+    }
 }
 
 /// A Liquid Glass "translate" button. Tapping it shows the native
@@ -26,6 +40,9 @@ enum TranslationLanguage: String, CaseIterable, Identifiable {
 /// none is selected, it greys out to just the translate icon.
 struct TranslationWidget: View {
     @Binding var language: TranslationLanguage?
+    /// Swaps the translate icon for a spinner and locks the menu while a
+    /// translation is in flight, so a second language can't be queued.
+    var isTranslating: Bool = false
 
     var body: some View {
         if let language {
@@ -53,18 +70,31 @@ struct TranslationWidget: View {
         } label: {
             if let language {
                 HStack(spacing: 8) {
-                    Image(systemName: "translate")
+                    if isTranslating {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Image(systemName: "translate")
+                    }
                     Text(language.rawValue)
                 }
                 .font(.system(size: 17, weight: .semibold))
                 .padding(.horizontal, 16)
                 .frame(height: 50)
             } else {
-                Image(systemName: "translate")
-                    .font(.system(size: 20, weight: .semibold))
-                    .frame(width: 50, height: 50)
+                if isTranslating {
+                    ProgressView()
+                        .frame(width: 50, height: 50)
+                } else {
+                    Image(systemName: "translate")
+                        .font(.system(size: 20, weight: .semibold))
+                        .frame(width: 50, height: 50)
+                }
             }
         }
+        // Blocks taps instead of using .disabled, which would grey the
+        // glassProminent style out; the button stays purple while loading.
+        .allowsHitTesting(!isTranslating)
     }
 }
 
