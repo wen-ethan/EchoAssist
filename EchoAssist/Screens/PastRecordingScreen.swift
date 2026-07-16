@@ -35,7 +35,7 @@ struct PastRecordingScreen: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(EchoPalette.surface)
+            .background(EchoPalette.surface.ignoresSafeArea())
             .navigationTitle("Past Recordings")
             .searchable(text: $searchTerm, prompt: "Search")
         }

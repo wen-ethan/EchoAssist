@@ -117,7 +117,7 @@ struct SettingsScreen: View {
                 Text("Text Size")
                     .font(.system(.body, weight: .semibold))
                     .foregroundStyle(.black)
-                Text("Follows your iPhone's Text Size setting")
+                Text("Follows your device's Text Size setting")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

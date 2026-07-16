@@ -41,16 +41,69 @@ extension SpeakerLine {
 /// Renders a speaker-labeled transcript (bold speaker name + regular body).
 struct SpeakerTranscriptView: View {
     let lines: [SpeakerLine]
+    /// Non-empty while the user searches the transcript: every occurrence in
+    /// the spoken text is highlighted, and the one whose ordinal (counted
+    /// across all lines) equals `currentMatch` gets the stronger color.
+    var searchTerm = ""
+    var currentMatch = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            ForEach(lines) { line in
-                (Text("\(line.speaker): ").bold() + Text(line.text))
+            ForEach(Array(zip(lines, firstOrdinals)), id: \.0.id) { line, firstOrdinal in
+                (Text("\(line.speaker): ").bold()
+                    + Text(highlighted(line.text, firstOrdinal: firstOrdinal)))
                     .font(.body)
                     .foregroundStyle(.black)
                     .fixedSize(horizontal: false, vertical: true)
+                    .id(line.id)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Global ordinal of each line's first match, so per-line highlighting
+    /// knows which of its occurrences is the current one.
+    private var firstOrdinals: [Int] {
+        var running = 0
+        return lines.map { line in
+            defer { running += line.text.matchRanges(of: searchTerm).count }
+            return running
+        }
+    }
+
+    private func highlighted(_ text: String, firstOrdinal: Int) -> AttributedString {
+        var result = AttributedString()
+        var cursor = text.startIndex
+        for (offset, range) in text.matchRanges(of: searchTerm).enumerated() {
+            result += AttributedString(text[cursor..<range.lowerBound])
+            var match = AttributedString(text[range])
+            match.backgroundColor = firstOrdinal + offset == currentMatch
+                ? Color.orange.opacity(0.7)
+                : Color.yellow.opacity(0.4)
+            result += match
+            cursor = range.upperBound
+        }
+        result += AttributedString(text[cursor...])
+        return result
+    }
+}
+
+extension String {
+    /// Every case- and diacritic-insensitive occurrence of `term`, in order.
+    /// The search bar's match count and the transcript highlights both build
+    /// on this, so they can never disagree.
+    func matchRanges(of term: String) -> [Range<String.Index>] {
+        guard !term.isEmpty else { return [] }
+        var ranges: [Range<String.Index>] = []
+        var searchStart = startIndex
+        while let range = range(
+            of: term,
+            options: [.caseInsensitive, .diacriticInsensitive],
+            range: searchStart..<endIndex
+        ) {
+            ranges.append(range)
+            searchStart = range.upperBound
+        }
+        return ranges
     }
 }

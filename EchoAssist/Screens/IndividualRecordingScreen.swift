@@ -14,6 +14,9 @@ struct IndividualRecordingScreen: View {
 
     @State private var recording: Recording
     @State private var searchTerm = ""
+    /// Global ordinal (across all transcript lines) of the selected search
+    /// match — the one shown highlighted in orange and scrolled to.
+    @State private var currentMatchIndex = 0
     @State private var language: TranslationLanguage? = .english
     @State private var translationConfig: TranslationSession.Configuration?
     /// Finished translations, kept for this visit so re-picking a language
@@ -65,28 +68,54 @@ struct IndividualRecordingScreen: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // AI-generated summary, centered per the mockup.
-                Text(recording.summary)
-                    .font(.body)
-                    .foregroundStyle(.black)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 8)
+            ScrollViewReader { proxy in
+                VStack(alignment: .leading, spacing: 20) {
+                    // AI-generated summary, centered per the mockup.
+                    Text(recording.summary)
+                        .font(.body)
+                        .foregroundStyle(.black)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 8)
 
-                Divider()
+                    Divider()
 
-                SpeakerTranscriptView(lines: displayedTranscript)
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 24)
-        }
-        .background(EchoPalette.surface)
-        .safeAreaInset(edge: .bottom) {
-            TranslationWidget(language: $language, isTranslating: isTranslating)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                    SpeakerTranscriptView(
+                        lines: displayedTranscript,
+                        searchTerm: searchTerm,
+                        currentMatch: currentMatchIndex
+                    )
+                }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 8)
+                .padding(.bottom, 24)
+                .onChange(of: searchTerm) {
+                    currentMatchIndex = 0
+                    scrollToCurrentMatch(proxy)
+                }
+                .onChange(of: currentMatchIndex) {
+                    scrollToCurrentMatch(proxy)
+                }
+                .onChange(of: displayedTranscript) {
+                    // A translation swapping in re-derives the matches.
+                    currentMatchIndex = 0
+                }
+            }
+        }
+        // ignoresSafeArea() covers the keyboard region too, so the surface
+        // color extends behind the keyboard and it reads as glass floating
+        // over the content instead of sitting in a grey slab.
+        .background(EchoPalette.surface.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom) {
+            // While searching, the bottom bar becomes the match navigator —
+            // like Safari's find-on-page bar replacing the toolbar.
+            if searchTerm.isEmpty {
+                TranslationWidget(language: $language, isTranslating: isTranslating)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 8)
+            } else {
+                matchNavigator
+            }
         }
         .onChange(of: language) { _, selected in
             guard let selected, selected != .english, translations[selected] == nil else { return }
@@ -103,7 +132,7 @@ struct IndividualRecordingScreen: View {
         .translationTask(translationConfig) { session in
             await translateTranscript(with: session)
         }
-        .searchable(text: $searchTerm, prompt: "Search")
+        .searchable(text: $searchTerm, prompt: "Find in transcript")
         .navigationTitle(recording.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -174,6 +203,61 @@ struct IndividualRecordingScreen: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(translationError ?? "")
+        }
+    }
+
+    /// The line each search match lives on, in match order — element `i` is
+    /// the line to scroll to for global match `i`.
+    private var matchLineIDs: [UUID] {
+        displayedTranscript.flatMap { line in
+            Array(repeating: line.id, count: line.text.matchRanges(of: searchTerm).count)
+        }
+    }
+
+    /// "N of M" readout plus previous/next buttons for stepping through
+    /// matches, wrapping around at either end.
+    private var matchNavigator: some View {
+        HStack(spacing: 24) {
+            Text(matchLineIDs.isEmpty
+                ? "No matches"
+                : "\(currentMatchIndex + 1) of \(matchLineIDs.count)")
+                .font(.subheadline.monospacedDigit())
+                .foregroundStyle(matchLineIDs.isEmpty ? Color.secondary : Color.black)
+
+            Spacer()
+
+            Button {
+                stepMatch(-1)
+            } label: {
+                Image(systemName: "chevron.up")
+            }
+
+            Button {
+                stepMatch(1)
+            } label: {
+                Image(systemName: "chevron.down")
+            }
+        }
+        .font(.system(.body, weight: .semibold))
+        .tint(EchoPalette.primary)
+        .disabled(matchLineIDs.isEmpty)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .glassEffect()
+        .padding(.horizontal, 24)
+        .padding(.bottom, 8)
+    }
+
+    private func stepMatch(_ delta: Int) {
+        let total = matchLineIDs.count
+        guard total > 0 else { return }
+        currentMatchIndex = (currentMatchIndex + delta + total) % total
+    }
+
+    private func scrollToCurrentMatch(_ proxy: ScrollViewProxy) {
+        guard currentMatchIndex < matchLineIDs.count else { return }
+        withAnimation {
+            proxy.scrollTo(matchLineIDs[currentMatchIndex], anchor: .center)
         }
     }
 
