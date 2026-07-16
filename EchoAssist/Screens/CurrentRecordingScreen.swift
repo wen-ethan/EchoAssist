@@ -345,7 +345,7 @@ struct CurrentRecordingScreen: View {
             VStack(alignment: .leading, spacing: 20) {
                 if !hasAnyCaption {
                     Text("Tap the microphone to start live captions.")
-                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded, weight: .semibold))
                         .lineSpacing(8)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -360,14 +360,14 @@ struct CurrentRecordingScreen: View {
                             + Text(open.text).foregroundStyle(.black)
                             + Text(captioner.pendingLine.isEmpty ? "" : " \(captioner.pendingLine)")
                                 .foregroundStyle(.secondary))
-                            .font(.system(size: 17))
+                            .font(.body)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)
                     } else if !captioner.pendingLine.isEmpty {
                         // Heard speech whose speaker isn't decided yet (the
                         // first second of a session).
                         Text(captioner.pendingLine)
-                            .font(.system(size: 17))
+                            .font(.body)
                             .italic()
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)

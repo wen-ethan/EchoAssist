@@ -15,11 +15,11 @@ struct RecordingCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(recording.title)
-                .font(.system(size: 20, weight: .bold))
+                .font(.system(.title3, weight: .bold))
                 .foregroundStyle(.black)
 
             Text(recording.summary)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundStyle(.black)
                 .lineLimit(2)
         }

@@ -78,7 +78,7 @@ struct TranslationWidget: View {
                     }
                     Text(language.rawValue)
                 }
-                .font(.system(size: 17, weight: .semibold))
+                .font(.system(.body, weight: .semibold))
                 .padding(.horizontal, 16)
                 .frame(height: 50)
             } else {
@@ -87,7 +87,7 @@ struct TranslationWidget: View {
                         .frame(width: 50, height: 50)
                 } else {
                     Image(systemName: "translate")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(.title3, weight: .semibold))
                         .frame(width: 50, height: 50)
                 }
             }

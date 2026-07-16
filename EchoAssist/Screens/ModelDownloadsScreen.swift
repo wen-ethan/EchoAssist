@@ -24,7 +24,7 @@ struct ModelDownloadsScreen: View {
                         + "leaves your phone. That requires two speech models "
                         + "(about 800 MB total), downloaded once and stored on this device."
                 )
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundStyle(.secondary)
 
                 ForEach(SpeechModel.allCases) { model in
@@ -87,10 +87,10 @@ struct ModelDownloadRow: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.displayName)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(.subheadline, weight: .semibold))
                         .foregroundStyle(.black)
                     Text(model.purpose)
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -114,19 +114,19 @@ struct ModelDownloadRow: View {
         switch downloads.status(for: model) {
         case .notDownloaded:
             Text("Not downloaded")
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundStyle(.secondary)
         case .downloading(let fraction, _):
             Text("\(Int(fraction * 100))%")
-                .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                .font(.system(.footnote, weight: .semibold).monospacedDigit())
                 .foregroundStyle(EchoPalette.primary)
         case .downloaded:
             Label(sizeText, systemImage: "checkmark.circle.fill")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(.caption, weight: .medium))
                 .foregroundStyle(EchoPalette.primary)
         case .failed:
             Label("Failed", systemImage: "exclamationmark.triangle.fill")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(.caption, weight: .medium))
                 .foregroundStyle(.red)
         }
     }
@@ -162,7 +162,7 @@ struct InitialModelDownloadSheet: View {
                     + "say is sent to a server. To do that, it first needs to download "
                     + "two speech models — about 800 MB. This happens only once."
             )
-            .font(.system(size: 15))
+            .font(.subheadline)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
 

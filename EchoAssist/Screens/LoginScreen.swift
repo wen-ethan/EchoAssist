@@ -16,7 +16,7 @@ struct LoginScreen: View {
             Spacer()
 
             Text("EchoAssist")
-                .font(.system(size: 40, weight: .heavy))
+                .font(.system(.largeTitle, weight: .heavy))
                 .foregroundStyle(.black)
 
             Spacer()
@@ -24,7 +24,7 @@ struct LoginScreen: View {
             VStack(spacing: 20) {
                 Button(action: onLogin) {
                     Text("Login")
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.system(.body, weight: .medium))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.borderedProminent)
@@ -32,7 +32,7 @@ struct LoginScreen: View {
 
                 Button(action: onSignUp) {
                     Text("Sign up")
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.system(.body, weight: .medium))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.borderedProminent)

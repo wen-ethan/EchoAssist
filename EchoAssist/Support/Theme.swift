@@ -46,7 +46,7 @@ struct SpeakerTranscriptView: View {
         VStack(alignment: .leading, spacing: 20) {
             ForEach(lines) { line in
                 (Text("\(line.speaker): ").bold() + Text(line.text))
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundStyle(.black)
                     .fixedSize(horizontal: false, vertical: true)
             }

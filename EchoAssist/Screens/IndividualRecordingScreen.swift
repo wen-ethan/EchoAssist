@@ -68,7 +68,7 @@ struct IndividualRecordingScreen: View {
             VStack(alignment: .leading, spacing: 20) {
                 // AI-generated summary, centered per the mockup.
                 Text(recording.summary)
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundStyle(.black)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, alignment: .center)
