@@ -144,18 +144,16 @@ struct SettingsScreen: View {
     }
 
     private var logOutButton: some View {
-        HStack(spacing: 12) {
-            Button(action: onLogOut) {
+        Button(action: onLogOut) {
+            HStack(spacing: 8) {
+                Image(systemName: "rectangle.portrait.and.arrow.right")
                 Text("Log Out")
-                    .font(.system(.body, weight: .bold))
-                    .foregroundStyle(.black)
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .background(EchoPalette.lavender, in: Capsule())
+                
             }
-
-            Image(systemName: "rectangle.portrait.and.arrow.right")
-                .font(.title2)
-                .foregroundStyle(.black)
+            .font(.system(.body, weight: .bold))
+            .foregroundStyle(.black)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .background(EchoPalette.lavender, in: Capsule())
         }
     }
 }
