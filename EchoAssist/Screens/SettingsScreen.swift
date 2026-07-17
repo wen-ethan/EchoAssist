@@ -19,7 +19,6 @@ struct SettingsScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    accountRow
                     speechModelsRow
                     hapticsRow
                     textSizeRow
@@ -47,26 +46,6 @@ struct SettingsScreen: View {
             .sheet(isPresented: $showOnboarding) {
                 OnboardingSheet()
             }
-        }
-    }
-
-    private var accountRow: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Account Center")
-                    .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(.black)
-                Text("Password, security, personal details")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Image(systemName: "person.crop.circle.fill")
-                .resizable()
-                .frame(width: 48, height: 48)
-                .foregroundStyle(EchoPalette.primary)
         }
     }
 
