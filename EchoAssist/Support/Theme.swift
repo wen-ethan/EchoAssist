@@ -19,6 +19,20 @@ enum EchoPalette {
     static let lavender = Color(red: 0xE6 / 255, green: 0xDD / 255, blue: 0xF6 / 255)
 }
 
+/// The app-specific text size override, shared between Settings (which sets
+/// it) and the app root (which applies it to every screen).
+enum TextSizePreference {
+    static let useSystemKey = "useSystemTextSize"
+    static let customIndexKey = "customTextSizeIndex"
+    /// Index of `.large` in `DynamicTypeSize.allCases` — the system default.
+    static let defaultIndex = 3
+    static let maxIndex = DynamicTypeSize.allCases.count - 1
+
+    static func size(at index: Int) -> DynamicTypeSize {
+        DynamicTypeSize.allCases[min(max(index, 0), maxIndex)]
+    }
+}
+
 /// A single line of transcript attributed to a speaker.
 struct SpeakerLine: Identifiable, Hashable, Codable {
     var id = UUID()

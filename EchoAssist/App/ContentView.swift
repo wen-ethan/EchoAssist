@@ -14,6 +14,11 @@ struct ContentView: View {
 
     @State private var store = RecordingStore()
     @State private var selectedTab: AppTab = .recording
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @AppStorage(TextSizePreference.useSystemKey) private var useSystemTextSize = true
+    @AppStorage(TextSizePreference.customIndexKey)
+    private var customTextSizeIndex = TextSizePreference.defaultIndex
+    @State private var showOnboarding = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -31,6 +36,23 @@ struct ContentView: View {
         }
         .tint(EchoPalette.primary)
         .environment(store)
+        .onAppear {
+            if !hasSeenOnboarding {
+                showOnboarding = true
+            }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            hasSeenOnboarding = true
+        } content: {
+            OnboardingSheet()
+        }
+        // When the user opts out of system Dynamic Type in Settings, every
+        // screen (sheets included) renders at the app-specific size instead.
+        .transformEnvironment(\.dynamicTypeSize) { size in
+            if !useSystemTextSize {
+                size = TextSizePreference.size(at: customTextSizeIndex)
+            }
+        }
     }
 }
 

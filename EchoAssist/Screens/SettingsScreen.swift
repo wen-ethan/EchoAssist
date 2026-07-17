@@ -9,7 +9,10 @@ import SwiftUI
 
 struct SettingsScreen: View {
     @AppStorage("hapticsEnabled") private var hapticsEnabled = true
-    var onLogOut: () -> Void = {}
+    @AppStorage(TextSizePreference.useSystemKey) private var useSystemTextSize = true
+    @AppStorage(TextSizePreference.customIndexKey)
+    private var customTextSizeIndex = TextSizePreference.defaultIndex
+    @State private var showOnboarding = false
     private let downloads = ModelDownloadCenter.shared
 
     var body: some View {
@@ -26,13 +29,13 @@ struct SettingsScreen: View {
                         Button {
                             // Open privacy policy.
                         } label: {
-                            Text("privacy policy")
+                            Text("Privacy Policy")
                                 .font(.system(.subheadline, weight: .bold))
                                 .underline()
                                 .foregroundStyle(.black)
                         }
 
-                        logOutButton
+                        onboardingButton
                     }
                     .padding(.top, 8)
                 }
@@ -41,6 +44,9 @@ struct SettingsScreen: View {
             }
             .background(EchoPalette.surface)
             .navigationTitle("Settings")
+            .sheet(isPresented: $showOnboarding) {
+                OnboardingSheet()
+            }
         }
     }
 
@@ -112,48 +118,81 @@ struct SettingsScreen: View {
     }
 
     private var textSizeRow: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Text Size")
-                    .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(.black)
-                Text("Follows your device's Text Size setting")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Text Size")
+                        .font(.system(.body, weight: .semibold))
+                        .foregroundStyle(.black)
+                    Text(useSystemTextSize
+                        ? "Follows your device's Text Size setting"
+                        : "Custom size, just for EchoAssist")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Toggle("Use device text size", isOn: $useSystemTextSize)
+                    .labelsHidden()
+                    .tint(EchoPalette.primary)
             }
 
-            Spacer()
-        }
-    }
+            if !useSystemTextSize {
+                HStack(spacing: 12) {
+                    Text("A")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Slider(
+                        value: customSizeSliderValue,
+                        in: 0...Double(TextSizePreference.maxIndex),
+                        step: 1
+                    )
+                    .tint(EchoPalette.primary)
+                    Text("A")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
 
-    /// Live preview of the system text size, so the user sees the effect of
-    /// changing it without leaving Settings.
-    private var exampleBox: some View {
-        VStack(spacing: 12) {
-            Text("Example Text")
-                .font(.system(.body, weight: .semibold))
-                .foregroundStyle(.black)
-                .frame(maxWidth: .infinity, minHeight: 200)
-                .background(EchoPalette.lavender, in: RoundedRectangle(cornerRadius: 16))
-
-            Text("Change it in Settings → Accessibility → Display & Text Size → Larger Text, or add Text Size to Control Center to resize EchoAssist alone.")
-                .font(.caption)
+            Text(useSystemTextSize
+                ? "Change it in Settings → Accessibility → Display & Text Size "
+                    + "→ Larger Text. The example below shows the result."
+                : "Drag the slider to resize text everywhere in EchoAssist. "
+                    + "The example below shows the result.")
+                .font(.footnote)
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .animation(.default, value: useSystemTextSize)
     }
 
-    private var logOutButton: some View {
-        Button(action: onLogOut) {
-            HStack(spacing: 8) {
-                Image(systemName: "rectangle.portrait.and.arrow.right")
-                Text("Log Out")
-                
-            }
-            .font(.system(.body, weight: .bold))
+    private var customSizeSliderValue: Binding<Double> {
+        Binding(
+            get: { Double(customTextSizeIndex) },
+            set: { customTextSizeIndex = Int($0.rounded()) }
+        )
+    }
+
+    /// Live preview of the effective text size — system or custom — so the
+    /// user sees the effect of changing it without leaving Settings.
+    private var exampleBox: some View {
+        Text("Example Text")
+            .font(.system(.body, weight: .semibold))
             .foregroundStyle(.black)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(EchoPalette.lavender, in: Capsule())
+            .frame(maxWidth: .infinity, minHeight: 200)
+            .background(EchoPalette.lavender, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var onboardingButton: some View {
+        Button {
+            showOnboarding = true
+        } label: {
+            Text("View Onboarding")
+                .font(.system(.subheadline))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(EchoPalette.lavender, in: Capsule())
         }
     }
 }

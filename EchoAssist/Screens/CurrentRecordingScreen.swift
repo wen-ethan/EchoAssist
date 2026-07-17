@@ -273,6 +273,19 @@ struct CurrentRecordingScreen: View {
             }
             .navigationTitle("EchoAssist")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 8) {
+                        Image("AppIconSmall")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        Text("EchoAssist")
+                            .font(.headline)
+                    }
+                }
+            }
             .onChange(of: captioner.isListening) { _, isListening in
                 // When a recording stops, automatically save the transcript.
                 if !isListening {
