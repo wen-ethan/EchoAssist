@@ -25,8 +25,8 @@ struct SettingsScreen: View {
                     exampleBox
 
                     VStack(spacing: 16) {
-                        Button {
-                            // Open privacy policy.
+                        NavigationLink {
+                            PrivacyPolicyScreen()
                         } label: {
                             Text("Privacy Policy")
                                 .font(.system(.subheadline, weight: .bold))
@@ -35,6 +35,7 @@ struct SettingsScreen: View {
                         }
 
                         onboardingButton
+                        sourceCodeLink
                     }
                     .padding(.top, 8)
                 }
@@ -160,6 +161,22 @@ struct SettingsScreen: View {
             .foregroundStyle(.black)
             .frame(maxWidth: .infinity, minHeight: 200)
             .background(EchoPalette.lavender, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    /// Footer line: the app version, from the bundle so it tracks
+    /// MARKETING_VERSION, next to the link to the project's source.
+    private var sourceCodeLink: some View {
+        HStack(spacing: 6) {
+            Text("Version \(appVersion)")
+            Text("•")
+            Link("Source Code on GitHub", destination: EchoLinks.repository)
+        }
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+    }
+
+    private var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
     }
 
     private var onboardingButton: some View {

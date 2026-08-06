@@ -19,10 +19,12 @@ struct IndividualRecordingScreen: View {
     @State private var currentMatchIndex = 0
     @State private var language: TranslationLanguage? = .english
     @State private var translationConfig: TranslationSession.Configuration?
-    /// Finished translations, kept for this visit so re-picking a language
-    /// is instant. The transcript itself never changes after recording, so
-    /// entries never go stale.
-    @State private var translations: [TranslationLanguage: [SpeakerLine]] = [:]
+    /// Finished translations, kept for this visit so re-picking a language is
+    /// instant. Only the translated *text* is cached, positionally matched to
+    /// `recording.transcript`; speaker names are read live from the transcript
+    /// when the lines are built, so renaming a speaker shows up in every
+    /// language instead of only the untranslated one.
+    @State private var translations: [TranslationLanguage: [String]] = [:]
     @State private var isTranslating = false
     @State private var translationError: String?
     @State private var isRenaming = false
@@ -45,8 +47,15 @@ struct IndividualRecordingScreen: View {
     /// in English, so English (or no selection) shows the original; other
     /// languages show their cached translation once it lands.
     private var displayedTranscript: [SpeakerLine] {
-        guard let language, language != .english else { return recording.transcript }
-        return translations[language] ?? recording.transcript
+        guard let language, language != .english,
+              let texts = translations[language],
+              texts.count == recording.transcript.count
+        else { return recording.transcript }
+        // Keep each line's original id so search scroll targets survive a
+        // language switch, and take the speaker from the live transcript.
+        return zip(recording.transcript, texts).map { line, text in
+            SpeakerLine(id: line.id, speaker: line.speaker, text: text)
+        }
     }
 
     /// The transcript's distinct speakers, in order of first appearance.
@@ -273,13 +282,14 @@ struct IndividualRecordingScreen: View {
                 TranslationSession.Request(
                     sourceText: line.text, clientIdentifier: String(index))
             }
-            var lines = recording.transcript
+            // Falls back to the original text for any line the session skips,
+            // keeping the cache positionally aligned with the transcript.
+            var texts = recording.transcript.map(\.text)
             for response in try await session.translations(from: requests) {
                 guard let id = response.clientIdentifier, let index = Int(id) else { continue }
-                lines[index] = SpeakerLine(
-                    speaker: lines[index].speaker, text: response.targetText)
+                texts[index] = response.targetText
             }
-            translations[target] = lines
+            translations[target] = texts
         } catch {
             translationError = error.localizedDescription
             language = .english

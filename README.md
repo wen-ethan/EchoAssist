@@ -75,3 +75,9 @@ Open `EchoAssist.xcodeproj` in Xcode and run. The FluidAudio dependency resolves
 ## Team
 
 Built by Rachel, Katelyn, and Ethan.
+
+## License
+
+EchoAssist is released under the [MIT License](LICENSE).
+
+The license covers this app's own source. [FluidAudio](https://github.com/FluidInference/FluidAudio), which powers the speech pipeline, is Apache-2.0, and the speech models it downloads at runtime carry their own terms — NVIDIA's Open Model License for Sortformer, and the license listed in FluidAudio's [model catalog](https://github.com/FluidInference/FluidAudio/blob/main/Documentation/Models.md) for Parakeet. No model weights are redistributed in this repository.

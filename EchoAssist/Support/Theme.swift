@@ -19,6 +19,13 @@ enum EchoPalette {
     static let lavender = Color(red: 0xE6 / 255, green: 0xDD / 255, blue: 0xF6 / 255)
 }
 
+/// Where the project lives. Shown as the contact point in the privacy policy
+/// and as the source-code link in Settings.
+enum EchoLinks {
+    static let repositoryLabel = "github.com/wen-ethan/EchoAssist"
+    static let repository = URL(string: "https://\(repositoryLabel)")!
+}
+
 /// The app-specific text size override, shared between Settings (which sets
 /// it) and the app root (which applies it to every screen).
 enum TextSizePreference {
