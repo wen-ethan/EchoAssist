@@ -62,7 +62,7 @@ Recordings persist as `recordings.json` in the app's Documents directory via [Re
 
 ## Requirements
 
-- **iOS 26.5+**, Xcode 26
+- **iOS 26+**, Xcode 26
 - A real device with a microphone (the simulator has no usable mic input; haptics also require a device)
 - ~800 MB free space for the one-time speech model download
 - Apple Intelligence-capable device (iPhone 15 Pro or later) for AI summaries — older devices still get everything else
