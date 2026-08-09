@@ -40,7 +40,7 @@ struct ModelDownloadsScreen: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    .tint(EchoPalette.primary)
+                    .tint(EchoPalette.primaryFill)
 
                     Text("Captions can't start until these models are downloaded.")
                         .font(.footnote)
@@ -88,7 +88,7 @@ struct ModelDownloadRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.displayName)
                         .font(.system(.subheadline, weight: .semibold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(EchoPalette.textPrimary)
                     Text(model.purpose)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -155,7 +155,7 @@ struct InitialModelDownloadSheet: View {
 
             Text("Setting Up Live Captions")
                 .font(.title2.bold())
-                .foregroundStyle(.black)
+                .foregroundStyle(EchoPalette.textPrimary)
 
             Text(
                 "EchoAssist captions speech entirely on your device, so nothing you "
@@ -186,7 +186,7 @@ struct InitialModelDownloadSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .tint(EchoPalette.primary)
+                .tint(EchoPalette.primaryFill)
 
                 Button("Not Now") {
                     dismiss()
@@ -201,7 +201,7 @@ struct InitialModelDownloadSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .tint(EchoPalette.primary)
+                .tint(EchoPalette.primaryFill)
             }
         }
         .padding(24)

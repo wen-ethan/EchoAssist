@@ -49,7 +49,7 @@ struct TranslationWidget: View {
             menu
                 .menuStyle(.button)
                 .buttonStyle(.glassProminent)
-                .tint(EchoPalette.primary)
+                .tint(EchoPalette.primaryFill)
                 .accessibilityValue(language.rawValue)
         } else {
             menu

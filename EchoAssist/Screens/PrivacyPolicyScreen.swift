@@ -148,7 +148,7 @@ struct PrivacyPolicyScreen: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Your conversations stay on your phone.")
                 .font(.system(.title3, weight: .bold))
-                .foregroundStyle(.black)
+                .foregroundStyle(EchoPalette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Text("Last updated \(Self.lastUpdated)")
                 .font(.footnote)
@@ -174,7 +174,7 @@ private struct PolicySection<Content: View>: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.system(.headline, weight: .semibold))
-                .foregroundStyle(.black)
+                .foregroundStyle(EchoPalette.textPrimary)
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)

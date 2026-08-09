@@ -98,7 +98,7 @@ struct OnboardingSheet: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .tint(EchoPalette.primary)
+            .tint(EchoPalette.primaryFill)
             .padding(.horizontal, 24)
             .padding(.top, 16)
 
@@ -151,7 +151,7 @@ private struct OnboardingPageView: View {
 
             Text(page.title)
                 .font(.title2.bold())
-                .foregroundStyle(.black)
+                .foregroundStyle(EchoPalette.textPrimary)
                 .multilineTextAlignment(.center)
 
             Text(page.message)

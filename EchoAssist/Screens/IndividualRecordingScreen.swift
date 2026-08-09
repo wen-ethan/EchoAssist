@@ -82,7 +82,7 @@ struct IndividualRecordingScreen: View {
                     // AI-generated summary, centered per the mockup.
                     Text(recording.summary)
                         .font(.body)
-                        .foregroundStyle(.black)
+                        .foregroundStyle(EchoPalette.textPrimary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 8)
@@ -152,7 +152,7 @@ struct IndividualRecordingScreen: View {
             ToolbarItem(placement: .principal) {
                 Text(recording.title)
                     .font(.system(.subheadline, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(EchoPalette.textPrimary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     // Without this the bar hands the title a single-line-tall
@@ -263,7 +263,7 @@ struct IndividualRecordingScreen: View {
                 ? "No matches"
                 : "\(currentMatchIndex + 1) of \(matchLineIDs.count)")
                 .font(.subheadline.monospacedDigit())
-                .foregroundStyle(matchLineIDs.isEmpty ? Color.secondary : Color.black)
+                .foregroundStyle(matchLineIDs.isEmpty ? Color.secondary : EchoPalette.textPrimary)
 
             Spacer(minLength: 12)
 
@@ -366,7 +366,7 @@ private struct SpeakerRenameSheet: View {
                             )
                         )
                         .autocorrectionDisabled()
-                        .foregroundStyle(.black)
+                        .foregroundStyle(EchoPalette.textPrimary)
                     }
                 } footer: {
                     Text("Renaming a speaker updates every line they appear in. Leave a name blank to keep it as it is.")

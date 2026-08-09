@@ -17,6 +17,7 @@ struct SettingsScreen: View {
     @AppStorage(TextSizePreference.useSystemKey) private var useSystemTextSize = true
     @AppStorage(TextSizePreference.customIndexKey)
     private var customTextSizeIndex = TextSizePreference.defaultIndex
+    @AppStorage(AppearancePreference.key) private var appearance = AppearancePreference.system
     @State private var showOnboarding = false
     private let downloads = ModelDownloadCenter.shared
 
@@ -24,7 +25,7 @@ struct SettingsScreen: View {
         NavigationStack {
             List {
                 captionsSection
-                textSizeSection
+                accessibilitySection
                 aboutSection
                 versionFooter
             }
@@ -50,7 +51,7 @@ struct SettingsScreen: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Speech Models")
                             .font(.system(.body, weight: .semibold))
-                            .foregroundStyle(.black)
+                            .foregroundStyle(EchoPalette.textPrimary)
                         Text(downloads.overallSummary)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
@@ -66,51 +67,170 @@ struct SettingsScreen: View {
             }
             .onAppear { downloads.refreshFromDisk() }
 
-            Toggle("Haptics", isOn: $hapticsEnabled)
-                .font(.system(.body, weight: .semibold))
-                .foregroundStyle(.black)
-                .tint(EchoPalette.primary)
+            Toggle(isOn: $hapticsEnabled) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Haptics")
+                        .font(.system(.body, weight: .semibold))
+                        .foregroundStyle(EchoPalette.textPrimary)
+                    Text("Vibrate when the live captions switch speakers")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(EchoPalette.primary)
         } header: {
             Text("Captions")
-        } footer: {
-            Text("Haptics vibrate when the live captions switch to a different speaker.")
         }
         .listRowBackground(EchoPalette.fillSecondary)
     }
 
-    private var textSizeSection: some View {
+    /// How the app looks rather than what it does: color scheme first, then
+    /// text size. Both are accessibility settings, so they share a section.
+    ///
+    /// One `List` row holding all three controls, with dividers drawn by
+    /// hand, rather than a row each. SwiftUI lays this section's second row
+    /// out a third of a point (one pixel) below where the first one ends —
+    /// only here, not in Captions or About, and regardless of what the rows
+    /// contain, what order they're in, or whether separators are shown. The
+    /// cell clips its background, so that pixel can't be painted over, and it
+    /// shows as a hairline of the page surface straight across the card:
+    /// white in light mode, black in dark. With everything in a single cell
+    /// there is no boundary between rows for the gap to open in.
+    private var accessibilitySection: some View {
         Section {
-            Toggle("Use Device Text Size", isOn: $useSystemTextSize)
-                .font(.system(.body, weight: .semibold))
-                .foregroundStyle(.black)
-                .tint(EchoPalette.primary)
+            VStack(spacing: 0) {
+                appearanceRow
+                    .padding(.horizontal, Self.rowInset)
+                    .padding(.vertical, Self.rowPadding)
 
-            if !useSystemTextSize {
-                HStack(spacing: 12) {
-                    Text("A")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                    Slider(
-                        value: customSizeSliderValue,
-                        in: 0...Double(TextSizePreference.maxIndex),
-                        step: 1
-                    )
-                    .tint(EchoPalette.primary)
-                    Text("A")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                rowDivider
+
+                textSizeRow
+                    .padding(.horizontal, Self.rowInset)
+                    .padding(.vertical, Self.rowPadding)
+
+                if !useSystemTextSize {
+                    rowDivider
+
+                    textSizeSlider
+                        .padding(.horizontal, Self.rowInset)
+                        .padding(.vertical, Self.rowPadding)
                 }
             }
+            .listRowInsets(EdgeInsets())
         } header: {
-            Text("Text Size")
-        } footer: {
-            Text(useSystemTextSize
-                ? "Follows your device's Text Size setting. Change it in "
-                    + "Settings → Accessibility → Display & Text Size → Larger Text."
-                : "Drag the slider to resize text everywhere in EchoAssist.")
+            Text("Accessibility")
         }
         .listRowBackground(EchoPalette.fillSecondary)
-        .animation(.default, value: useSystemTextSize)
+    }
+
+    /// Stands in for the separator a grouped `List` draws between rows.
+    /// Not `Divider()`: that is a hairline, a third of a point, where the
+    /// list's own separator is a full point in a lighter grey — side by side
+    /// with the Captions card the hairline reads as too thin. The tint is
+    /// `textPrimary` at low opacity so it darkens the card in light mode and
+    /// lightens it in dark, which is what the system separator does.
+    private var rowDivider: some View {
+        Rectangle()
+            .fill(EchoPalette.textPrimary.opacity(0.085))
+            .frame(height: 1)
+            .padding(.horizontal, Self.rowInset)
+    }
+
+    /// The insets a grouped `List` would apply to a row, reapplied by hand
+    /// since `accessibilitySection` zeroes them to lay its own rows out.
+    /// Measured off the Captions card so the two match: its two-line rows are
+    /// 67.7pt tall around 38pt of text, and its separators inset 16pt at both
+    /// ends.
+    private static let rowInset: CGFloat = 16
+    private static let rowPadding: CGFloat = 15
+
+    private var textSizeRow: some View {
+        // Animated at the mutation rather than with `.animation` on the
+        // Section, which would wrap the whole group in an animatable
+        // container for the sake of one row.
+        Toggle(isOn: Binding(
+            get: { useSystemTextSize },
+            set: { newValue in withAnimation { useSystemTextSize = newValue } }
+        )) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Use Device Text Size")
+                    .font(.system(.body, weight: .semibold))
+                    .foregroundStyle(EchoPalette.textPrimary)
+                Text(useSystemTextSize
+                    ? "Follows Settings → Accessibility → Larger Text"
+                    : "Sized with the slider, just for EchoAssist")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .tint(EchoPalette.primary)
+    }
+
+    private var textSizeSlider: some View {
+        HStack(spacing: 12) {
+            Text("A")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
+            Slider(
+                value: customSizeSliderValue,
+                in: 0...Double(TextSizePreference.maxIndex),
+                step: 1
+            )
+            .tint(EchoPalette.primary)
+            Text("A")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// The Appearance dropdown: title and explanation on the left, the
+    /// current choice and the chevrons on the right, and the menu hanging off
+    /// only that trailing pair so it opens from the control rather than from
+    /// the middle of the row.
+    private var appearanceRow: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Appearance")
+                    .font(.system(.body, weight: .semibold))
+                    .foregroundStyle(EchoPalette.textPrimary)
+                Text("Set light or dark mode")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+            }
+
+            Spacer()
+
+            Menu {
+                Picker("Appearance", selection: $appearance) {
+                    ForEach(AppearancePreference.allCases) { option in
+                        Text(option.label).tag(option)
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                HStack(spacing: 6) {
+                    Text(appearance.label)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(.footnote, weight: .semibold))
+                }
+                // The accent itself, not `.secondary`: that hierarchical
+                // style resolves against the menu button's tint and lands on
+                // a washed-out purple. Naming the color keeps the value the
+                // same purple as the toggles beside it.
+                .foregroundStyle(EchoPalette.primary)
+                // Grows the tap target well past the small text without
+                // moving it: the row is as tall as the two-line title block
+                // either way, and only the leading edge is padded so the
+                // chevrons stay aligned with the toggle below.
+                .padding(.vertical, 8)
+                .padding(.leading, 12)
+                .contentShape(.rect)
+            }
+            .accessibilityLabel("Appearance")
+            .accessibilityValue(appearance.label)
+        }
     }
 
     private var aboutSection: some View {
@@ -119,20 +239,20 @@ struct SettingsScreen: View {
                 PrivacyPolicyScreen()
             } label: {
                 Text("Privacy Policy")
-                    .foregroundStyle(.black)
+                    .foregroundStyle(EchoPalette.textPrimary)
             }
 
             Button {
                 showOnboarding = true
             } label: {
                 Text("View Onboarding")
-                    .foregroundStyle(.black)
+                    .foregroundStyle(EchoPalette.textPrimary)
             }
 
             Link(destination: EchoLinks.repository) {
                 HStack {
                     Text("Source Code on GitHub")
-                        .foregroundStyle(.black)
+                        .foregroundStyle(EchoPalette.textPrimary)
                     Spacer()
                     Image(systemName: "arrow.up.right")
                         .font(.system(.footnote, weight: .semibold))

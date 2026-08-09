@@ -17,11 +17,11 @@ struct RecordingCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(recording.title)
                     .font(.system(.title3, weight: .bold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(EchoPalette.textPrimary)
 
                 Text(recording.summary)
                     .font(.subheadline)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(EchoPalette.textPrimary)
                     .lineLimit(2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

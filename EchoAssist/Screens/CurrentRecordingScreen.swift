@@ -320,7 +320,7 @@ struct CurrentRecordingScreen: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(captioner.isListening ? "Live captions on" : "Live captions off")
                     .font(.headline)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(EchoPalette.textPrimary)
                 Text(headerStatus)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -369,8 +369,8 @@ struct CurrentRecordingScreen: View {
                     // not-yet-attributed tail appended in a lighter shade so
                     // new speech appears instantly and "solidifies" in place.
                     if let open = captioner.openBlock {
-                        let speaker = Text("\(open.speaker): ").bold().foregroundStyle(.black)
-                        let spoken = Text(open.text).foregroundStyle(.black)
+                        let speaker = Text("\(open.speaker): ").bold().foregroundStyle(EchoPalette.textPrimary)
+                        let spoken = Text(open.text).foregroundStyle(EchoPalette.textPrimary)
                         let pending = Text(captioner.pendingLine.isEmpty ? "" : " \(captioner.pendingLine)")
                             .foregroundStyle(.secondary)
                         Text("\(speaker)\(spoken)\(pending)")
@@ -412,11 +412,11 @@ struct CurrentRecordingScreen: View {
         } else if downloads.isDownloading {
             lockedButton("Downloading models…")
         } else if !downloads.allDownloaded {
-            actionButton("Download Models", icon: "arrow.down.circle.fill", tint: EchoPalette.primary) {
+            actionButton("Download Models", icon: "arrow.down.circle.fill", tint: EchoPalette.primaryFill) {
                 downloads.showFirstRunExplainer = true
             }
         } else {
-            actionButton("Start", icon: "mic.fill", tint: EchoPalette.primary) {
+            actionButton("Start", icon: "mic.fill", tint: EchoPalette.primaryFill) {
                 captioner.toggleListening()
             }
         }
@@ -446,7 +446,7 @@ struct CurrentRecordingScreen: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
-        .tint(EchoPalette.primary)
+        .tint(EchoPalette.primaryFill)
         .disabled(true)
     }
 }

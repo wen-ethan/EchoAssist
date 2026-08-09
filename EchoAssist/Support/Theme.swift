@@ -8,12 +8,22 @@
 import SwiftUI
 
 /// Colors shared across the EchoAssist screens.
+///
+/// Every value lives in `Assets.xcassets` with a light and a dark variant, so
+/// the whole app follows the color scheme without any `colorScheme` checks in
+/// view code. Deciding what "dark" means for a color belongs in the catalog,
+/// where Xcode can preview it; this enum only names the roles.
 enum EchoPalette {
-    /// Schemes/Surface — the lavender-white screen background.
-    static let surface = Color(red: 0xFE / 255, green: 0xF7 / 255, blue: 0xFF / 255)
-    /// Fills/Secondary — card and search-field backgrounds (translucent gray).
-    static let fillSecondary = Color(.sRGB, red: 120 / 255, green: 120 / 255, blue: 128 / 255, opacity: 0.16)
-    /// Schemes/Primary — selected accent (purple, #6750A4).
+    /// Schemes/Surface — the screen background. Lavender-white in light,
+    /// near-black plum in dark.
+    static let surface = Color("Surface", bundle: .main)
+    /// Fills/Secondary — card and search-field backgrounds (translucent gray,
+    /// heavier in dark so cards stay visible against the darker surface).
+    static let fillSecondary = Color("FillSecondary", bundle: .main)
+    /// Schemes/Primary — the accent, used for tints and for accent-colored
+    /// text and icons. Purple (#6750A4) in light; a much lighter purple in
+    /// dark, where the accent has to read as a *foreground* against the dark
+    /// surface.
     ///
     /// Read from the `AccentColor` asset rather than written as a literal, so
     /// there is one source of truth. The asset matters independently: UIKit
@@ -21,8 +31,52 @@ enum EchoPalette {
     /// the app's accent asset and ignores SwiftUI's environment `tint`, so a
     /// literal here would leave that chrome untinted.
     static let primary = Color("AccentColor", bundle: .main)
+    /// The accent as a *filled* surface sitting behind a white label —
+    /// prominent buttons. It can't just be `primary`: the light purple that
+    /// makes accent text readable in dark mode is far too light to put white
+    /// text on, so this stays dark in both schemes.
+    static let primaryFill = Color("AccentFill", bundle: .main)
     /// Light purple used for the menu/settings accents.
-    static let lavender = Color(red: 0xE6 / 255, green: 0xDD / 255, blue: 0xF6 / 255)
+    static let lavender = Color("Lavender", bundle: .main)
+    /// Body and title text. `Color.primary` already resolves to black on
+    /// light and white on dark, so this is a name for the role rather than an
+    /// asset — it exists so no screen reaches for a bare `.black` again.
+    static let textPrimary = Color.primary
+    /// Behind a transcript search hit. Translucent yellow over the light
+    /// surface; opaque and much deeper in dark, where the same wash would
+    /// leave white text sitting on a bright band.
+    static let highlightMatch = Color("HighlightMatch", bundle: .main)
+    /// Behind the *selected* search hit — the one the navigator scrolls to.
+    static let highlightCurrentMatch = Color("HighlightCurrentMatch", bundle: .main)
+}
+
+/// Whether the app follows the system appearance or pins itself to light or
+/// dark. Set in Settings → Accessibility, applied once at the app root.
+enum AppearancePreference: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    static let key = "appearancePreference"
+
+    var id: Self { self }
+
+    var label: String {
+        switch self {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
+    }
+
+    /// What to hand `preferredColorScheme` — `nil` means "don't override".
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
 }
 
 /// Where the project lives. Shown as the contact point in the privacy policy
@@ -70,7 +124,7 @@ struct SpeakerTranscriptView: View {
                 let speaker = Text("\(line.speaker): ").bold()
                 Text("\(speaker)\(highlighted(line.text, firstOrdinal: firstOrdinal))")
                     .font(.body)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(EchoPalette.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                     .id(line.id)
             }
@@ -95,8 +149,8 @@ struct SpeakerTranscriptView: View {
             result += AttributedString(text[cursor..<range.lowerBound])
             var match = AttributedString(text[range])
             match.backgroundColor = firstOrdinal + offset == currentMatch
-                ? Color.orange.opacity(0.7)
-                : Color.yellow.opacity(0.4)
+                ? EchoPalette.highlightCurrentMatch
+                : EchoPalette.highlightMatch
             result += match
             cursor = range.upperBound
         }
