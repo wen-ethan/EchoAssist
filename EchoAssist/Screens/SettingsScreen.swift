@@ -20,6 +20,7 @@ struct SettingsScreen: View {
     @AppStorage(AppearancePreference.key) private var appearance = AppearancePreference.system
     @State private var showOnboarding = false
     private let downloads = ModelDownloadCenter.shared
+    private let translation = TranslationLanguageCenter.shared
 
     var body: some View {
         NavigationStack {
@@ -66,6 +67,20 @@ struct SettingsScreen: View {
                 }
             }
             .onAppear { downloads.refreshFromDisk() }
+
+            NavigationLink {
+                TranslationLanguagesScreen()
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Translation")
+                        .font(.system(.body, weight: .semibold))
+                        .foregroundStyle(EchoPalette.textPrimary)
+                    Text(translation.overallSummary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .task { await translation.refresh() }
 
             Toggle(isOn: $hapticsEnabled) {
                 VStack(alignment: .leading, spacing: 2) {
