@@ -258,32 +258,37 @@ struct IndividualRecordingScreen: View {
     /// "N of M" readout plus previous/next buttons for stepping through
     /// matches, wrapping around at either end.
     private var matchNavigator: some View {
-        HStack(spacing: 24) {
+        HStack(spacing: 0) {
             Text(matchLineIDs.isEmpty
                 ? "No matches"
                 : "\(currentMatchIndex + 1) of \(matchLineIDs.count)")
                 .font(.subheadline.monospacedDigit())
                 .foregroundStyle(matchLineIDs.isEmpty ? Color.secondary : Color.black)
 
-            Spacer()
+            Spacer(minLength: 12)
 
             Button {
                 stepMatch(-1)
             } label: {
                 Image(systemName: "chevron.up")
+                    .frame(width: 44, height: 44)
+                    .contentShape(Circle())
             }
 
             Button {
                 stepMatch(1)
             } label: {
                 Image(systemName: "chevron.down")
+                    .frame(width: 44, height: 44)
+                    .contentShape(Circle())
             }
         }
         .font(.system(.body, weight: .semibold))
         .tint(EchoPalette.primary)
         .disabled(matchLineIDs.isEmpty)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.leading, 20)
+        .padding(.trailing, 4)
+        .padding(.vertical, 1)
         .glassEffect()
         .padding(.horizontal, 24)
         .padding(.bottom, 8)
