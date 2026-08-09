@@ -125,7 +125,10 @@ final class LiveCaptioner {
             // Settings), never as a side effect of Start — so a session only
             // ever pays the load/compile cost here, not an 800 MB fetch.
             guard downloads.allDownloaded else {
-                statusMessage = "Download the speech models first to start captioning."
+                statusMessage =
+                    downloads.hasIncompleteDownload
+                    ? "The model download didn't finish. Resume it to start captioning."
+                    : "Download the speech models first to start captioning."
                 return
             }
             isPreparingModels = true
@@ -412,7 +415,12 @@ struct CurrentRecordingScreen: View {
         } else if downloads.isDownloading {
             lockedButton("Downloading models…")
         } else if !downloads.allDownloaded {
-            actionButton("Download Models", icon: "arrow.down.circle.fill", tint: EchoPalette.primaryFill) {
+            actionButton(
+                downloads.hasIncompleteDownload ? "Resume Download" : "Download Models",
+                icon: downloads.hasIncompleteDownload
+                    ? "arrow.clockwise.circle.fill" : "arrow.down.circle.fill",
+                tint: EchoPalette.primaryFill
+            ) {
                 downloads.showFirstRunExplainer = true
             }
         } else {

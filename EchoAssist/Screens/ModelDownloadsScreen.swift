@@ -35,19 +35,45 @@ struct ModelDownloadsScreen: View {
                     Button {
                         downloads.downloadMissingModels()
                     } label: {
-                        Label("Download Now", systemImage: "arrow.down.circle.fill")
-                            .frame(maxWidth: .infinity)
+                        Label(
+                            downloads.hasIncompleteDownload ? "Resume Download" : "Download Now",
+                            systemImage: downloads.hasIncompleteDownload
+                                ? "arrow.clockwise.circle.fill" : "arrow.down.circle.fill"
+                        )
+                        .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                     .tint(EchoPalette.primaryFill)
 
-                    Text("Captions can't start until these models are downloaded.")
+                    Text(
+                        downloads.hasIncompleteDownload
+                            ? "Resuming picks up from the \(downloads.totalCachedSizeText) already downloaded."
+                            : "Captions can't start until these models are downloaded."
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                }
+
+                if downloads.canCancelDownload {
+                    Button(role: .destructive) {
+                        downloads.cancelDownloads()
+                    } label: {
+                        Label("Cancel Download", systemImage: "xmark.circle")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+
+                    Text("Files already downloaded are kept, so starting again picks up where this left off.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
 
-                if downloads.anyDownloaded && !downloads.isDownloading {
+                // Keyed off bytes on disk, not `allDownloaded`: a cancelled or
+                // failed download leaves partial files that are still worth
+                // being able to reclaim.
+                if downloads.hasCachedFiles && !downloads.isDownloading {
                     Button(role: .destructive) {
                         confirmRemoval = true
                     } label: {
@@ -56,6 +82,20 @@ struct ModelDownloadsScreen: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.large)
+                    // Attached to the button, not the screen, so the dialog is
+                    // anchored to what it acts on (a popover from the button
+                    // where the platform uses one).
+                    .confirmationDialog(
+                        "Remove downloaded models?", isPresented: $confirmRemoval,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Remove", role: .destructive) {
+                            downloads.removeDownloadedModels()
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("Frees \(downloads.totalCachedSizeText) of storage. You'll need to download the models again before captioning.")
+                    }
                 }
             }
             .padding(24)
@@ -64,16 +104,6 @@ struct ModelDownloadsScreen: View {
         .navigationTitle("Speech Models")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { downloads.refreshFromDisk() }
-        .confirmationDialog(
-            "Remove downloaded models?", isPresented: $confirmRemoval, titleVisibility: .visible
-        ) {
-            Button("Remove", role: .destructive) {
-                downloads.removeDownloadedModels()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Frees about 800 MB of storage. You'll need to download the models again before captioning.")
-        }
     }
 }
 
@@ -97,12 +127,23 @@ struct ModelDownloadRow: View {
                 statusBadge
             }
 
-            if case .downloading(let fraction, let detail) = downloads.status(for: model) {
+            switch downloads.status(for: model) {
+            case .downloading(let fraction, let detail):
                 ProgressView(value: fraction)
                     .tint(EchoPalette.primary)
                 Text(detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            case .incomplete:
+                Text("Stopped partway — \(sizeText) saved. Downloading again continues from here.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            case .failed(let message):
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            case .notDownloaded, .downloaded:
+                EmptyView()
             }
         }
         .padding(14)
@@ -120,6 +161,10 @@ struct ModelDownloadRow: View {
             Text("\(Int(fraction * 100))%")
                 .font(.system(.footnote, weight: .semibold).monospacedDigit())
                 .foregroundStyle(EchoPalette.primary)
+        case .incomplete:
+            Label("Incomplete", systemImage: "exclamationmark.circle.fill")
+                .font(.system(.caption, weight: .medium))
+                .foregroundStyle(.orange)
         case .downloaded:
             Label(sizeText, systemImage: "checkmark.circle.fill")
                 .font(.system(.caption, weight: .medium))
@@ -181,8 +226,11 @@ struct InitialModelDownloadSheet: View {
                 Button {
                     downloads.downloadMissingModels()
                 } label: {
-                    Text("Download (about 800 MB)")
-                        .frame(maxWidth: .infinity)
+                    Text(
+                        downloads.hasIncompleteDownload
+                            ? "Resume Download" : "Download (about 800 MB)"
+                    )
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
@@ -216,6 +264,11 @@ struct InitialModelDownloadSheet: View {
         if downloads.isDownloading {
             return "Keep the app open. You can close this and check progress any time "
                 + "in Settings → Speech Models; Start unlocks when the download finishes."
+        }
+        if downloads.hasIncompleteDownload {
+            return "A previous download stopped partway. Resuming continues from the "
+                + "\(downloads.totalCachedSizeText) already saved, so only what's missing "
+                + "is fetched."
         }
         return "Best over Wi-Fi. The models stay on your device, and you can remove "
             + "them any time in Settings → Speech Models."
