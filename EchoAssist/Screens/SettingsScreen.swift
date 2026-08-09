@@ -28,7 +28,6 @@ struct SettingsScreen: View {
                 captionsSection
                 accessibilitySection
                 aboutSection
-                versionFooter
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
@@ -277,22 +276,18 @@ struct SettingsScreen: View {
         } header: {
             Text("About")
         } footer: {
-            Text("Captions are generated entirely on this iPhone. "
-                + "Nothing you say is uploaded.")
-        }
-        .listRowBackground(EchoPalette.fillSecondary)
-    }
-
-    /// The app version, from the bundle so it tracks MARKETING_VERSION,
-    /// centered under the last section the way the system Settings app ends
-    /// a page.
-    private var versionFooter: some View {
-        Section {
-        } footer: {
+            // The version rides in this section's footer rather than in a
+            // section of its own. An empty `Section` puts a whole section's
+            // spacing above its footer, which left the version marooned far
+            // below the last card; as a real footer it sits the standard
+            // distance under it. From the bundle, so it tracks
+            // MARKETING_VERSION.
             Text("Version \(appVersion)")
                 .font(.footnote)
                 .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 8)
         }
+        .listRowBackground(EchoPalette.fillSecondary)
     }
 
     private var customSizeSliderValue: Binding<Double> {
