@@ -7,6 +7,62 @@
 
 import SwiftUI
 
+/// A color theme — the set of colors that would change if the app ever let
+/// people pick a different look.
+///
+/// Purple is the only one today and `EchoPalette.theme` pins the app to it.
+/// Adding another is meant to be two steps and no view changes: a case here,
+/// and a folder of colorsets beside `Purple` holding the same four names.
+///
+/// What belongs in a theme is the accent and the tinted surface that goes
+/// with it. Colors that carry meaning rather than brand — the neutral card
+/// fill, body text, the yellow of a search hit — stay on `EchoPalette` and
+/// are shared by every theme.
+enum EchoTheme: String, CaseIterable, Identifiable {
+    case purple
+
+    var id: Self { self }
+
+    /// For a theme picker, when there is one.
+    var displayName: String {
+        switch self {
+        case .purple: return "Purple"
+        }
+    }
+
+    /// The asset-catalog folder holding this theme's colorsets. The folder
+    /// is marked as providing a namespace, so its colors are addressed
+    /// "Purple/Primary" and two themes can both call a color "Primary".
+    private var assetFolder: String {
+        switch self {
+        case .purple: return "Purple"
+        }
+    }
+
+    /// The accent, for tints and for accent-colored text and icons. Purple
+    /// (#6750A4) in light; a much lighter purple in dark, where the accent
+    /// has to read as a *foreground* against the dark surface.
+    var primary: Color { color("Primary") }
+
+    /// The accent as a *filled* surface sitting behind a white label —
+    /// prominent buttons. It can't just be `primary`: the light purple that
+    /// makes accent text readable in dark mode is far too light to put white
+    /// text on, so this stays dark in both schemes.
+    var primaryFill: Color { color("PrimaryFill") }
+
+    /// A soft wash of the accent, behind accent-colored content: the
+    /// onboarding page dots and the privacy-policy callouts.
+    var container: Color { color("Container") }
+
+    /// The screen background — not neutral, but tinted towards the accent.
+    /// Lavender-white in light, near-black plum in dark.
+    var surface: Color { color("Surface") }
+
+    private func color(_ name: String) -> Color {
+        Color("\(assetFolder)/\(name)", bundle: .main)
+    }
+}
+
 /// Colors shared across the EchoAssist screens.
 ///
 /// Every value lives in `Assets.xcassets` with a light and a dark variant, so
@@ -14,30 +70,33 @@ import SwiftUI
 /// view code. Deciding what "dark" means for a color belongs in the catalog,
 /// where Xcode can preview it; this enum only names the roles.
 enum EchoPalette {
-    /// Schemes/Surface — the screen background. Lavender-white in light,
-    /// near-black plum in dark.
-    static let surface = Color("Surface", bundle: .main)
+    /// The theme every screen draws from.
+    ///
+    /// Hardcoded — there is no way to change it yet. When theme picking
+    /// ships, this becomes a stored preference read at the app root, and
+    /// nothing below it has to change, because no view names a theme.
+    ///
+    /// One caveat for that day. `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME`
+    /// points at `Purple/Primary`, which is what gives UIKit-backed chrome
+    /// (alerts, confirmation dialogs, `searchable`'s Cancel, text cursors)
+    /// its tint — that chrome never sees the SwiftUI `tint` set at the app
+    /// root. The build setting is resolved by name at compile time, so there
+    /// is exactly one global accent per build: a runtime theme change has to
+    /// set the window's `tintColor` to reach that chrome.
+    static let theme: EchoTheme = .purple
+
+    // MARK: - From the theme
+
+    static var surface: Color { theme.surface }
+    static var primary: Color { theme.primary }
+    static var primaryFill: Color { theme.primaryFill }
+    static var accentContainer: Color { theme.container }
+
+    // MARK: - Shared by every theme
+
     /// Fills/Secondary — card and search-field backgrounds (translucent gray,
     /// heavier in dark so cards stay visible against the darker surface).
     static let fillSecondary = Color("FillSecondary", bundle: .main)
-    /// Schemes/Primary — the accent, used for tints and for accent-colored
-    /// text and icons. Purple (#6750A4) in light; a much lighter purple in
-    /// dark, where the accent has to read as a *foreground* against the dark
-    /// surface.
-    ///
-    /// Read from the `AccentColor` asset rather than written as a literal, so
-    /// there is one source of truth. The asset matters independently: UIKit
-    /// -backed chrome (navigation back buttons, alerts, the share sheet) uses
-    /// the app's accent asset and ignores SwiftUI's environment `tint`, so a
-    /// literal here would leave that chrome untinted.
-    static let primary = Color("AccentColor", bundle: .main)
-    /// The accent as a *filled* surface sitting behind a white label —
-    /// prominent buttons. It can't just be `primary`: the light purple that
-    /// makes accent text readable in dark mode is far too light to put white
-    /// text on, so this stays dark in both schemes.
-    static let primaryFill = Color("AccentFill", bundle: .main)
-    /// Light purple used for the menu/settings accents.
-    static let lavender = Color("Lavender", bundle: .main)
     /// Body and title text. `Color.primary` already resolves to black on
     /// light and white on dark, so this is a name for the role rather than an
     /// asset — it exists so no screen reaches for a bare `.black` again.

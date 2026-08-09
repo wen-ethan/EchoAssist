@@ -125,7 +125,7 @@ struct OnboardingSheet: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(EchoPalette.lavender, in: Capsule())
+        .background(EchoPalette.accentContainer, in: Capsule())
         .animation(.default, value: pageIndex)
     }
 }
@@ -189,7 +189,7 @@ private struct OnboardingMedia: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20))
             } else {
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(EchoPalette.lavender)
+                    .fill(EchoPalette.accentContainer)
                     .overlay {
                         RoundedRectangle(cornerRadius: 20)
                             .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8]))
