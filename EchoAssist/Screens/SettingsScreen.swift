@@ -4,6 +4,11 @@
 //
 //  Implements the "Menu Screen" (Settings) from Figma.
 //
+//  Laid out as an inset-grouped List so it reads like the system Settings app:
+//  controls are grouped by what they affect, and the explanatory copy lives in
+//  each section's footer rather than as a subtitle under every row. Rows use
+//  the same fill as RecordingCard so Settings and Past Recordings match.
+//
 
 import SwiftUI
 
@@ -17,32 +22,15 @@ struct SettingsScreen: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    speechModelsRow
-                    hapticsRow
-                    textSizeRow
-                    exampleBox
-
-                    VStack(spacing: 16) {
-                        NavigationLink {
-                            PrivacyPolicyScreen()
-                        } label: {
-                            Text("Privacy Policy")
-                                .font(.system(.subheadline, weight: .bold))
-                                .underline()
-                                .foregroundStyle(.black)
-                        }
-
-                        onboardingButton
-                        sourceCodeLink
-                    }
-                    .padding(.top, 8)
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
+            List {
+                captionsSection
+                textSizeSection
+                aboutSection
+                versionFooter
             }
-            .background(EchoPalette.surface)
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(EchoPalette.surface.ignoresSafeArea())
             .navigationTitle("Settings")
             .sheet(isPresented: $showOnboarding) {
                 OnboardingSheet()
@@ -50,73 +38,52 @@ struct SettingsScreen: View {
         }
     }
 
-    private var speechModelsRow: some View {
-        NavigationLink {
-            ModelDownloadsScreen()
-        } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Speech Models")
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(.black)
-                    Text(downloads.overallSummary)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+    /// Everything that affects a live captioning session. The speech models
+    /// produce the captions; haptics fire only while captions are running, so
+    /// they belong here rather than in a section of their own.
+    private var captionsSection: some View {
+        Section {
+            NavigationLink {
+                ModelDownloadsScreen()
+            } label: {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Speech Models")
+                            .font(.system(.body, weight: .semibold))
+                            .foregroundStyle(.black)
+                        Text(downloads.overallSummary)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    if downloads.isDownloading {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
                 }
-
-                Spacer()
-
-                if downloads.isDownloading {
-                    ProgressView()
-                        .controlSize(.small)
-                }
-                Image(systemName: "chevron.right")
-                    .font(.system(.footnote, weight: .semibold))
-                    .foregroundStyle(.secondary)
             }
-        }
-        .onAppear { downloads.refreshFromDisk() }
-    }
-
-    private var hapticsRow: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Haptics")
-                    .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(.black)
-                Text("Vibrates when switching speakers")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
+            .onAppear { downloads.refreshFromDisk() }
 
             Toggle("Haptics", isOn: $hapticsEnabled)
-                .labelsHidden()
+                .font(.system(.body, weight: .semibold))
+                .foregroundStyle(.black)
                 .tint(EchoPalette.primary)
+        } header: {
+            Text("Captions")
+        } footer: {
+            Text("Haptics vibrate when the live captions switch to a different speaker.")
         }
+        .listRowBackground(EchoPalette.fillSecondary)
     }
 
-    private var textSizeRow: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Text Size")
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(.black)
-                    Text(useSystemTextSize
-                        ? "Follows your device's Text Size setting"
-                        : "Custom size, just for EchoAssist")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Toggle("Use device text size", isOn: $useSystemTextSize)
-                    .labelsHidden()
-                    .tint(EchoPalette.primary)
-            }
+    private var textSizeSection: some View {
+        Section {
+            Toggle("Use Device Text Size", isOn: $useSystemTextSize)
+                .font(.system(.body, weight: .semibold))
+                .foregroundStyle(.black)
+                .tint(EchoPalette.primary)
 
             if !useSystemTextSize {
                 HStack(spacing: 12) {
@@ -134,16 +101,63 @@ struct SettingsScreen: View {
                         .foregroundStyle(.secondary)
                 }
             }
-
+        } header: {
+            Text("Text Size")
+        } footer: {
             Text(useSystemTextSize
-                ? "Change it in Settings → Accessibility → Display & Text Size "
-                    + "→ Larger Text. The example below shows the result."
-                : "Drag the slider to resize text everywhere in EchoAssist. "
-                    + "The example below shows the result.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                ? "Follows your device's Text Size setting. Change it in "
+                    + "Settings → Accessibility → Display & Text Size → Larger Text."
+                : "Drag the slider to resize text everywhere in EchoAssist.")
         }
+        .listRowBackground(EchoPalette.fillSecondary)
         .animation(.default, value: useSystemTextSize)
+    }
+
+    private var aboutSection: some View {
+        Section {
+            NavigationLink {
+                PrivacyPolicyScreen()
+            } label: {
+                Text("Privacy Policy")
+                    .foregroundStyle(.black)
+            }
+
+            Button {
+                showOnboarding = true
+            } label: {
+                Text("View Onboarding")
+                    .foregroundStyle(.black)
+            }
+
+            Link(destination: EchoLinks.repository) {
+                HStack {
+                    Text("Source Code on GitHub")
+                        .foregroundStyle(.black)
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(.footnote, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text("About")
+        } footer: {
+            Text("Captions are generated entirely on this iPhone. "
+                + "Nothing you say is uploaded.")
+        }
+        .listRowBackground(EchoPalette.fillSecondary)
+    }
+
+    /// The app version, from the bundle so it tracks MARKETING_VERSION,
+    /// centered under the last section the way the system Settings app ends
+    /// a page.
+    private var versionFooter: some View {
+        Section {
+        } footer: {
+            Text("Version \(appVersion)")
+                .font(.footnote)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
     }
 
     private var customSizeSliderValue: Binding<Double> {
@@ -153,43 +167,8 @@ struct SettingsScreen: View {
         )
     }
 
-    /// Live preview of the effective text size — system or custom — so the
-    /// user sees the effect of changing it without leaving Settings.
-    private var exampleBox: some View {
-        Text("Example Text")
-            .font(.system(.body, weight: .semibold))
-            .foregroundStyle(.black)
-            .frame(maxWidth: .infinity, minHeight: 200)
-            .background(EchoPalette.lavender, in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    /// Footer line: the app version, from the bundle so it tracks
-    /// MARKETING_VERSION, next to the link to the project's source.
-    private var sourceCodeLink: some View {
-        HStack(spacing: 6) {
-            Text("Version \(appVersion)")
-            Text("•")
-            Link("Source Code on GitHub", destination: EchoLinks.repository)
-        }
-        .font(.footnote)
-        .foregroundStyle(.secondary)
-    }
-
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
-    }
-
-    private var onboardingButton: some View {
-        Button {
-            showOnboarding = true
-        } label: {
-            Text("View Onboarding")
-                .font(.system(.subheadline))
-                .foregroundStyle(.black)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(EchoPalette.lavender, in: Capsule())
-        }
     }
 }
 
