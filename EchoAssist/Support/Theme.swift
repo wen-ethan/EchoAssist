@@ -13,8 +13,14 @@ enum EchoPalette {
     static let surface = Color(red: 0xFE / 255, green: 0xF7 / 255, blue: 0xFF / 255)
     /// Fills/Secondary — card and search-field backgrounds (translucent gray).
     static let fillSecondary = Color(.sRGB, red: 120 / 255, green: 120 / 255, blue: 128 / 255, opacity: 0.16)
-    /// Schemes/Primary — selected accent (purple).
-    static let primary = Color(red: 0x67 / 255, green: 0x50 / 255, blue: 0xA4 / 255)
+    /// Schemes/Primary — selected accent (purple, #6750A4).
+    ///
+    /// Read from the `AccentColor` asset rather than written as a literal, so
+    /// there is one source of truth. The asset matters independently: UIKit
+    /// -backed chrome (navigation back buttons, alerts, the share sheet) uses
+    /// the app's accent asset and ignores SwiftUI's environment `tint`, so a
+    /// literal here would leave that chrome untinted.
+    static let primary = Color("AccentColor", bundle: .main)
     /// Light purple used for the menu/settings accents.
     static let lavender = Color(red: 0xE6 / 255, green: 0xDD / 255, blue: 0xF6 / 255)
 }
