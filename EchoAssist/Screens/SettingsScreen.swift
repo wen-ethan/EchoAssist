@@ -86,7 +86,7 @@ struct SettingsScreen: View {
                     Text("Haptics")
                         .font(.system(.body, weight: .semibold))
                         .foregroundStyle(EchoPalette.textPrimary)
-                    Text("Vibrate when the live captions switch speakers")
+                    Text("Vibrate when switching speakers")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -172,8 +172,8 @@ struct SettingsScreen: View {
                     .font(.system(.body, weight: .semibold))
                     .foregroundStyle(EchoPalette.textPrimary)
                 Text(useSystemTextSize
-                    ? "Follows Settings → Accessibility → Larger Text"
-                    : "Sized with the slider, just for EchoAssist")
+                    ? "Follows Settings → Accessibility →\nDisplay & Text Size → Larger Text"
+                    : "Custom Size, just for EchoAssist")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
