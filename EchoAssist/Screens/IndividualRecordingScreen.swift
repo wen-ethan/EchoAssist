@@ -145,33 +145,65 @@ struct IndividualRecordingScreen: View {
         .navigationTitle(recording.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            // A plain navigationTitle is single-line and truncates, and
+            // renamed recordings are often long. A principal item is the
+            // only way to let the title wrap — same approach as the
+            // toolbar in CurrentRecordingScreen.
+            ToolbarItem(placement: .principal) {
+                Text(recording.title)
+                    .font(.system(.subheadline, weight: .semibold))
+                    .foregroundStyle(.black)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    // Without this the bar hands the title a single-line-tall
+                    // slot and the second line has nowhere to go. Deliberately
+                    // no minimumScaleFactor: it makes SwiftUI shrink the text
+                    // to fit one line rather than wrap onto a second.
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            // Sharing is the one thing a user does *with* a finished
+            // recording rather than *to* it, and it's the most common
+            // action — so it gets its own button instead of hiding a level
+            // down in the menu.
+            ToolbarItem(placement: .topBarTrailing) {
+                ShareLink(
+                    item: exportText,
+                    preview: SharePreview(recording.title)
+                ) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
+
+            // What's left is "manage this recording", split so the
+            // destructive action can't be hit by muscle memory aimed at a
+            // rename directly above it.
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    ShareLink(
-                        item: exportText,
-                        preview: SharePreview(recording.title)
-                    ) {
-                        Label("Export as Text", systemImage: "square.and.arrow.up")
+                    // Both actions are renames, so the header carries the
+                    // verb and the rows only have to say what gets renamed.
+                    Section("Rename") {
+                        Button {
+                            draftTitle = recording.title
+                            isRenaming = true
+                        } label: {
+                            Label("Recording Title", systemImage: "pencil")
+                        }
+
+                        Button {
+                            isRenamingSpeakers = true
+                        } label: {
+                            Label("Speaker Names", systemImage: "person.2")
+                        }
+                        .disabled(speakers.isEmpty)
                     }
 
-                    Button {
-                        draftTitle = recording.title
-                        isRenaming = true
-                    } label: {
-                        Label("Rename Recording", systemImage: "pencil")
-                    }
-
-                    Button {
-                        isRenamingSpeakers = true
-                    } label: {
-                        Label("Rename Speakers", systemImage: "person.2")
-                    }
-                    .disabled(speakers.isEmpty)
-
-                    Button(role: .destructive) {
-                        isConfirmingDelete = true
-                    } label: {
-                        Label("Delete Recording", systemImage: "trash")
+                    Section {
+                        Button(role: .destructive) {
+                            isConfirmingDelete = true
+                        } label: {
+                            Label("Delete Recording", systemImage: "trash")
+                        }
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -329,11 +361,17 @@ private struct SpeakerRenameSheet: View {
                             )
                         )
                         .autocorrectionDisabled()
+                        .foregroundStyle(.black)
                     }
                 } footer: {
                     Text("Renaming a speaker updates every line they appear in. Leave a name blank to keep it as it is.")
                 }
+                // Same fill as RecordingCard and the Settings rows, so the
+                // sheet reads as part of the app rather than a system form.
+                .listRowBackground(EchoPalette.fillSecondary)
             }
+            .scrollContentBackground(.hidden)
+            .background(EchoPalette.surface)
             .navigationTitle("Rename Speakers")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -348,6 +386,11 @@ private struct SpeakerRenameSheet: View {
                 }
             }
         }
+        // Tints Cancel/Save and the text cursor; presentationBackground
+        // carries the surface color behind the nav bar too, which
+        // .background alone leaves grey.
+        .tint(EchoPalette.primary)
+        .presentationBackground(EchoPalette.surface)
     }
 }
 

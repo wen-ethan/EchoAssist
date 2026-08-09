@@ -13,15 +13,24 @@ struct RecordingCard: View {
     let recording: Recording
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(recording.title)
-                .font(.system(.title3, weight: .bold))
-                .foregroundStyle(.black)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(recording.title)
+                    .font(.system(.title3, weight: .bold))
+                    .foregroundStyle(.black)
 
-            Text(recording.summary)
-                .font(.subheadline)
-                .foregroundStyle(.black)
-                .lineLimit(2)
+                Text(recording.summary)
+                    .font(.subheadline)
+                    .foregroundStyle(.black)
+                    .lineLimit(2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Drawn here rather than left to the List's own disclosure
+            // indicator, which sits outside the card's rounded rect.
+            Image(systemName: "chevron.right")
+                .font(.system(.footnote, weight: .semibold))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 86, alignment: .leading)
         .padding(.horizontal, 17)
