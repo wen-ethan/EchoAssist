@@ -35,7 +35,7 @@ struct RecordingCard: View {
         .frame(maxWidth: .infinity, minHeight: 86, alignment: .leading)
         .padding(.horizontal, 17)
         .padding(.vertical, 14)
-        .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 20))
+        .background(EchoPalette.fillSecondary, in: EchoCard.shape)
     }
 }
 

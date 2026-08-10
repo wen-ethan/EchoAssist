@@ -26,55 +26,12 @@ struct TranslationLanguagesScreen: View {
     @State private var downloadError: String?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(
-                    "EchoAssist captions in English and translates on this device using "
-                        + "Apple's Translation framework — transcripts are never uploaded. "
-                        + "Each language downloads once, and iOS shares that download with "
-                        + "every app, so anything you've already downloaded in Translate "
-                        + "shows as ready here."
-                )
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-
-                ForEach(TranslationLanguageCenter.targets) { language in
-                    TranslationLanguageRow(
-                        language: language,
-                        isPreparing: active == language,
-                        isQueued: queue.contains(language),
-                        download: { enqueue([language]) }
-                    )
-                }
-
-                if !center.downloadableLanguages.isEmpty && active == nil && queue.isEmpty {
-                    Button {
-                        enqueue(center.downloadableLanguages)
-                    } label: {
-                        Label("Download All Languages", systemImage: "arrow.down.circle.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .tint(EchoPalette.primaryFill)
-
-                    Text("iOS asks you to confirm each language before it downloads.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-
-                Text(
-                    "Translation downloads belong to iOS, so EchoAssist can't delete them. "
-                        + "To free up the space, open Settings → Apps → Translate → "
-                        + "Downloaded Languages."
-                )
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .padding(.top, 4)
-            }
-            .padding(24)
+        List {
+            languageSection
         }
-        .background(EchoPalette.surface)
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(EchoPalette.surface.ignoresSafeArea())
         .navigationTitle("Translation")
         .navigationBarTitleDisplayMode(.inline)
         // Languages can be added or removed in the system Settings app while
@@ -94,6 +51,78 @@ struct TranslationLanguagesScreen: View {
         } message: {
             Text(downloadError ?? "")
         }
+    }
+
+    // MARK: - Language list
+
+    /// Every language in one card rather than a card each: the list is long
+    /// enough that a stack of separate cards reads as a dozen unrelated
+    /// controls, where grouped it reads as one list of languages.
+    ///
+    /// A real `Section` of an inset-grouped `List`, the same as every group in
+    /// Settings, so the card's corner, insets, row heights and separators are
+    /// the system's and stay right when the system changes them. The prose
+    /// this screen used to lay out around the card becomes the section's
+    /// header and footer, which is where a grouped list puts explanatory copy
+    /// anyway — and the footer is also where the Download All button lives, so
+    /// it keeps its place under the list without a section of its own.
+    private var languageSection: some View {
+        Section {
+            ForEach(TranslationLanguageCenter.targets) { language in
+                TranslationLanguageRow(
+                    language: language,
+                    isPreparing: active == language,
+                    isQueued: queue.contains(language),
+                    download: { enqueue([language]) }
+                )
+                // Where the separator starts and stops, stated rather than
+                // inferred. Left to itself the list picks the inset off a
+                // subview of the row, and on the states whose trailing side
+                // is a `Label` it picks that one — leaving a separator that
+                // starts under the badge instead of under the language name.
+                .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                .alignmentGuide(.listRowSeparatorTrailing) { $0[.trailing] }
+            }
+        } header: {
+            // Prose, not a section title. A grouped list styles a header as a
+            // label for the group below it — larger, tighter, and upper-cased
+            // by the list itself — so the font, the color and the casing are
+            // all named here to keep this reading as the paragraph it is,
+            // matching the footer copy underneath the list.
+            Text(
+                "Captions are English; translation runs on your phone, so transcripts "
+                    + "are never uploaded. Languages download once and are shared with "
+                    + "Apple's Translate — some may already be ready."
+            )
+            .textCase(nil)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .padding(.bottom, 4)
+        } footer: {
+            VStack(alignment: .leading, spacing: 16) {
+                if !center.downloadableLanguages.isEmpty && active == nil && queue.isEmpty {
+                    Button {
+                        enqueue(center.downloadableLanguages)
+                    } label: {
+                        Label("Download All Languages", systemImage: "arrow.down.circle.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .tint(EchoPalette.primaryFill)
+
+                    Text("iOS asks you to confirm each language before it downloads.")
+                }
+
+                Text(
+                    "Translation downloads belong to iOS, so EchoAssist can't delete them. "
+                        + "To free up the space, open Settings → Apps → Translate → "
+                        + "Downloaded Languages."
+                )
+            }
+            .padding(.top, 8)
+        }
+        .listRowBackground(EchoPalette.fillSecondary)
     }
 
     // MARK: - Download queue
@@ -138,8 +167,10 @@ struct TranslationLanguagesScreen: View {
     }
 }
 
-/// One language's card: name, what state its download is in, and — when it
-/// isn't downloaded yet — the button that fetches it.
+/// One language's row: the name, and on the trailing side whatever the
+/// language's state calls for — the button that downloads it, or a badge
+/// saying where it got to. Just the content: the `List` row it sits in
+/// supplies the insets, the height and the background.
 private struct TranslationLanguageRow: View {
     let language: TranslationLanguage
     let isPreparing: Bool
@@ -149,32 +180,8 @@ private struct TranslationLanguageRow: View {
     private let center = TranslationLanguageCenter.shared
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(language.rawValue)
-                    .font(.system(.subheadline, weight: .semibold))
-                    .foregroundStyle(EchoPalette.textPrimary)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
+        SettingsRow(language.rawValue) {
             trailing
-        }
-        .padding(14)
-        .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 14))
-    }
-
-    private var subtitle: String {
-        if isPreparing { return "Downloading…" }
-        if isQueued { return "Waiting…" }
-        switch center.status(for: language) {
-        case .installed: return "Works offline"
-        case .downloadable: return "Downloads the first time you use it"
-        case .unsupported: return "Not supported on this device"
-        case .unknown: return "Checking…"
         }
     }
 
@@ -199,8 +206,12 @@ private struct TranslationLanguageRow: View {
                     .buttonStyle(.bordered)
                     .tint(EchoPalette.primary)
             case .unsupported:
-                Image(systemName: "xmark.circle")
-                    .font(.system(.footnote, weight: .semibold))
+                // Spelled out rather than left as a bare icon: with the
+                // subtitles gone this is the only thing standing in for
+                // "iOS can't translate this on this device", and a lone
+                // crossed-out circle reads as a button to clear something.
+                Label("Unsupported", systemImage: "xmark.circle")
+                    .font(.system(.caption, weight: .medium))
                     .foregroundStyle(.secondary)
             case .unknown:
                 ProgressView()

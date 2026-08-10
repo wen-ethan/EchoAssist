@@ -20,9 +20,9 @@ struct ModelDownloadsScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text(
-                    "EchoAssist captions speech entirely on your device — audio never "
-                        + "leaves your phone. That requires two speech models "
-                        + "(about 800 MB total), downloaded once and stored on this device."
+                    "EchoAssist captions on your phone — audio is never uploaded. "
+                        + "This requires two speech models, about 800 MB, downloaded "
+                        + "once and kept on this device."
                 )
                 .font(.footnote)
                 .foregroundStyle(.secondary)
@@ -135,7 +135,7 @@ struct ModelDownloadRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             case .incomplete:
-                Text("Stopped partway — \(sizeText) saved. Downloading again continues from here.")
+                Text("Stopped partway · \(sizeText) downloaded.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             case .failed(let message):
@@ -147,7 +147,7 @@ struct ModelDownloadRow: View {
             }
         }
         .padding(14)
-        .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 14))
+        .background(EchoPalette.fillSecondary, in: EchoCard.shape)
     }
 
     @ViewBuilder

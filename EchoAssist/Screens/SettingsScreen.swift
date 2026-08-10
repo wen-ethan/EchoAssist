@@ -47,18 +47,7 @@ struct SettingsScreen: View {
             NavigationLink {
                 ModelDownloadsScreen()
             } label: {
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Speech Models")
-                            .font(.system(.body, weight: .semibold))
-                            .foregroundStyle(EchoPalette.textPrimary)
-                        Text(downloads.overallSummary)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
+                SettingsRow("Speech Models", subtitle: downloads.overallSummary) {
                     if downloads.isDownloading {
                         ProgressView()
                             .controlSize(.small)
@@ -70,26 +59,12 @@ struct SettingsScreen: View {
             NavigationLink {
                 TranslationLanguagesScreen()
             } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Translation")
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(EchoPalette.textPrimary)
-                    Text(translation.overallSummary)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
+                SettingsRowLabel("Translation", subtitle: translation.overallSummary)
             }
             .task { await translation.refresh() }
 
             Toggle(isOn: $hapticsEnabled) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Haptics")
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(EchoPalette.textPrimary)
-                    Text("Vibrate when switching speakers")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
+                SettingsRowLabel("Haptics", subtitle: "Vibrate when switching speakers")
             }
             .tint(EchoPalette.primary)
         } header: {
@@ -167,16 +142,12 @@ struct SettingsScreen: View {
             get: { useSystemTextSize },
             set: { newValue in withAnimation { useSystemTextSize = newValue } }
         )) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Use Device Text Size")
-                    .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(EchoPalette.textPrimary)
-                Text(useSystemTextSize
+            SettingsRowLabel(
+                "Use Device Text Size",
+                subtitle: useSystemTextSize
                     ? "Follows Settings → Accessibility →\nDisplay & Text Size → Larger Text"
-                    : "Custom Size, just for EchoAssist")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
+                    : "Custom Size, just for EchoAssist"
+            )
         }
         .tint(EchoPalette.primary)
     }
@@ -203,19 +174,7 @@ struct SettingsScreen: View {
     /// only that trailing pair so it opens from the control rather than from
     /// the middle of the row.
     private var appearanceRow: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Appearance")
-                    .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(EchoPalette.textPrimary)
-                Text("Set light or dark mode")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.leading)
-            }
-
-            Spacer()
-
+        SettingsRow("Appearance", subtitle: "Set light or dark mode") {
             Menu {
                 Picker("Appearance", selection: $appearance) {
                     ForEach(AppearancePreference.allCases) { option in

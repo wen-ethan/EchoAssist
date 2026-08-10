@@ -333,7 +333,7 @@ struct CurrentRecordingScreen: View {
             Spacer()
         }
         .padding(16)
-        .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 20))
+        .background(EchoPalette.fillSecondary, in: EchoCard.shape)
     }
 
     /// The header line tracks the captioner while a session is live or
@@ -398,7 +398,7 @@ struct CurrentRecordingScreen: View {
             .padding(20)
             .frame(maxWidth: .infinity, minHeight: 360, alignment: .topLeading)
         }
-        .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 20))
+        .background(EchoPalette.fillSecondary, in: EchoCard.shape)
     }
 
     /// The one primary button, by state: Stop while listening; a locked

@@ -109,6 +109,24 @@ enum EchoPalette {
     static let highlightCurrentMatch = Color("HighlightCurrentMatch", bundle: .main)
 }
 
+/// The corner on a card laid out by hand — recording panels, past-recording
+/// cards, the speech-model rows.
+///
+/// 20pt, the radius the recording screens were already drawing, now in one
+/// place so a new card can't land on a different number. Continuous rather
+/// than circular: the same radius drawn circular turns more abruptly at the
+/// corner, and every card in the app curves the same way only if the style is
+/// pinned here too.
+///
+/// The grouped lists in Settings are the one thing this doesn't cover. Those
+/// cards are drawn by the system at its own (larger) radius, and there is no
+/// API to ask it for a different one — so Settings and its subpages are a
+/// little rounder than the cards here, deliberately.
+enum EchoCard {
+    static let cornerRadius: CGFloat = 20
+    static let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+}
+
 /// Whether the app follows the system appearance or pins itself to light or
 /// dark. Set in Settings → Accessibility, applied once at the app root.
 enum AppearancePreference: String, CaseIterable, Identifiable {
