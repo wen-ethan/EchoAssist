@@ -437,7 +437,7 @@ struct CurrentRecordingScreen: View {
             Label(title, systemImage: icon)
                 .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.glassProminent)
         .controlSize(.large)
         .tint(tint)
     }
@@ -452,7 +452,7 @@ struct CurrentRecordingScreen: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.glassProminent)
         .controlSize(.large)
         .tint(EchoPalette.primaryFill)
         .disabled(true)

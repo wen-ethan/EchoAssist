@@ -42,7 +42,7 @@ struct ModelDownloadsScreen: View {
                         )
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.glassProminent)
                     .controlSize(.large)
                     .tint(EchoPalette.primaryFill)
 
@@ -62,7 +62,7 @@ struct ModelDownloadsScreen: View {
                         Label("Cancel Download", systemImage: "xmark.circle")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.glass)
                     .controlSize(.large)
 
                     Text("Files already downloaded are kept, so starting again picks up where this left off.")
@@ -80,7 +80,7 @@ struct ModelDownloadsScreen: View {
                         Label("Remove Downloaded Models", systemImage: "trash")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.glass)
                     .controlSize(.large)
                     // Attached to the button, not the screen, so the dialog is
                     // anchored to what it acts on (a popover from the button
@@ -232,7 +232,7 @@ struct InitialModelDownloadSheet: View {
                     )
                     .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .controlSize(.large)
                 .tint(EchoPalette.primaryFill)
 
@@ -247,7 +247,7 @@ struct InitialModelDownloadSheet: View {
                     Text(downloads.allDownloaded ? "Done" : "Got It")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .controlSize(.large)
                 .tint(EchoPalette.primaryFill)
             }

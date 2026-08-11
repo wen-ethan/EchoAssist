@@ -107,7 +107,7 @@ struct TranslationLanguagesScreen: View {
                         Label("Download All Languages", systemImage: "arrow.down.circle.fill")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.glassProminent)
                     .controlSize(.large)
                     .tint(EchoPalette.primaryFill)
 

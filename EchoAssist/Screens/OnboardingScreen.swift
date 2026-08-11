@@ -96,7 +96,7 @@ struct OnboardingSheet: View {
                 Text(isLastPage ? "Get Started" : "Next")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
             .controlSize(.large)
             .tint(EchoPalette.primaryFill)
             .padding(.horizontal, 24)
