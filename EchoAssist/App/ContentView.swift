@@ -18,6 +18,7 @@ struct ContentView: View {
     @AppStorage(TextSizePreference.useSystemKey) private var useSystemTextSize = true
     @AppStorage(TextSizePreference.customIndexKey)
     private var customTextSizeIndex = TextSizePreference.defaultIndex
+    @AppStorage(AppearancePreference.key) private var appearance = AppearancePreference.system
     @State private var showOnboarding = false
 
     var body: some View {
@@ -53,6 +54,10 @@ struct ContentView: View {
                 size = TextSizePreference.size(at: customTextSizeIndex)
             }
         }
+        // Applied at the root so it reaches the whole window — tab bar and
+        // presented sheets included — rather than one screen at a time.
+        // `.system` resolves to nil, which leaves iOS in charge.
+        .preferredColorScheme(appearance.colorScheme)
     }
 }
 

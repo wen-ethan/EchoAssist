@@ -30,7 +30,7 @@ private let onboardingPages: [OnboardingPage] = [
         media: .appIcon,
         title: "Welcome to EchoAssist",
         message: "Live captions for real-world conversations, entirely on your "
-            + "device. Nothing you record ever leaves your phone."
+            + "device. Audio is never saved, and transcripts never leave your phone."
     ),
     OnboardingPage(
         media: .demo(asset: "OnboardingTranscribe", symbol: "mic.fill"),
@@ -96,9 +96,9 @@ struct OnboardingSheet: View {
                 Text(isLastPage ? "Get Started" : "Next")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
             .controlSize(.large)
-            .tint(EchoPalette.primary)
+            .tint(EchoPalette.primaryFill)
             .padding(.horizontal, 24)
             .padding(.top, 16)
 
@@ -125,7 +125,7 @@ struct OnboardingSheet: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(EchoPalette.lavender, in: Capsule())
+        .background(EchoPalette.accentContainer, in: Capsule())
         .animation(.default, value: pageIndex)
     }
 }
@@ -151,7 +151,7 @@ private struct OnboardingPageView: View {
 
             Text(page.title)
                 .font(.title2.bold())
-                .foregroundStyle(.black)
+                .foregroundStyle(EchoPalette.textPrimary)
                 .multilineTextAlignment(.center)
 
             Text(page.message)
@@ -189,7 +189,7 @@ private struct OnboardingMedia: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20))
             } else {
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(EchoPalette.lavender)
+                    .fill(EchoPalette.accentContainer)
                     .overlay {
                         RoundedRectangle(cornerRadius: 20)
                             .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8]))

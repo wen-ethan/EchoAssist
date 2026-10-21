@@ -7,16 +7,153 @@
 
 import SwiftUI
 
+/// A color theme — the set of colors that would change if the app ever let
+/// people pick a different look.
+///
+/// Purple is the only one today and `EchoPalette.theme` pins the app to it.
+/// Adding another is meant to be two steps and no view changes: a case here,
+/// and a folder of colorsets beside `Purple` holding the same four names.
+///
+/// What belongs in a theme is the accent and the tinted surface that goes
+/// with it. Colors that carry meaning rather than brand — the neutral card
+/// fill, body text, the yellow of a search hit — stay on `EchoPalette` and
+/// are shared by every theme.
+enum EchoTheme: String, CaseIterable, Identifiable {
+    case purple
+
+    var id: Self { self }
+
+    /// For a theme picker, when there is one.
+    var displayName: String {
+        switch self {
+        case .purple: return "Purple"
+        }
+    }
+
+    /// The asset-catalog folder holding this theme's colorsets. The folder
+    /// is marked as providing a namespace, so its colors are addressed
+    /// "Purple/Primary" and two themes can both call a color "Primary".
+    private var assetFolder: String {
+        switch self {
+        case .purple: return "Purple"
+        }
+    }
+
+    /// The accent, for tints and for accent-colored text and icons. Purple
+    /// (#6750A4) in light; a much lighter purple in dark, where the accent
+    /// has to read as a *foreground* against the dark surface.
+    var primary: Color { color("Primary") }
+
+    /// The accent as a *filled* surface sitting behind a white label —
+    /// prominent buttons. It can't just be `primary`: the light purple that
+    /// makes accent text readable in dark mode is far too light to put white
+    /// text on, so this stays dark in both schemes.
+    var primaryFill: Color { color("PrimaryFill") }
+
+    /// A soft wash of the accent, behind accent-colored content: the
+    /// onboarding page dots and the privacy-policy callouts.
+    var container: Color { color("Container") }
+
+    /// The screen background — not neutral, but tinted towards the accent.
+    /// Lavender-white in light, near-black plum in dark.
+    var surface: Color { color("Surface") }
+
+    private func color(_ name: String) -> Color {
+        Color("\(assetFolder)/\(name)", bundle: .main)
+    }
+}
+
 /// Colors shared across the EchoAssist screens.
+///
+/// Every value lives in `Assets.xcassets` with a light and a dark variant, so
+/// the whole app follows the color scheme without any `colorScheme` checks in
+/// view code. Deciding what "dark" means for a color belongs in the catalog,
+/// where Xcode can preview it; this enum only names the roles.
 enum EchoPalette {
-    /// Schemes/Surface — the lavender-white screen background.
-    static let surface = Color(red: 0xFE / 255, green: 0xF7 / 255, blue: 0xFF / 255)
-    /// Fills/Secondary — card and search-field backgrounds (translucent gray).
-    static let fillSecondary = Color(.sRGB, red: 120 / 255, green: 120 / 255, blue: 128 / 255, opacity: 0.16)
-    /// Schemes/Primary — selected accent (purple).
-    static let primary = Color(red: 0x67 / 255, green: 0x50 / 255, blue: 0xA4 / 255)
-    /// Light purple used for the menu/settings accents.
-    static let lavender = Color(red: 0xE6 / 255, green: 0xDD / 255, blue: 0xF6 / 255)
+    /// The theme every screen draws from.
+    ///
+    /// Hardcoded — there is no way to change it yet. When theme picking
+    /// ships, this becomes a stored preference read at the app root, and
+    /// nothing below it has to change, because no view names a theme.
+    ///
+    /// One caveat for that day. `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME`
+    /// points at `Purple/Primary`, which is what gives UIKit-backed chrome
+    /// (alerts, confirmation dialogs, `searchable`'s Cancel, text cursors)
+    /// its tint — that chrome never sees the SwiftUI `tint` set at the app
+    /// root. The build setting is resolved by name at compile time, so there
+    /// is exactly one global accent per build: a runtime theme change has to
+    /// set the window's `tintColor` to reach that chrome.
+    static let theme: EchoTheme = .purple
+
+    // MARK: - From the theme
+
+    static var surface: Color { theme.surface }
+    static var primary: Color { theme.primary }
+    static var primaryFill: Color { theme.primaryFill }
+    static var accentContainer: Color { theme.container }
+
+    // MARK: - Shared by every theme
+
+    /// Fills/Secondary — card and search-field backgrounds (translucent gray,
+    /// heavier in dark so cards stay visible against the darker surface).
+    static let fillSecondary = Color("FillSecondary", bundle: .main)
+    /// Body and title text. `Color.primary` already resolves to black on
+    /// light and white on dark, so this is a name for the role rather than an
+    /// asset — it exists so no screen reaches for a bare `.black` again.
+    static let textPrimary = Color.primary
+    /// Behind a transcript search hit. Translucent yellow over the light
+    /// surface; opaque and much deeper in dark, where the same wash would
+    /// leave white text sitting on a bright band.
+    static let highlightMatch = Color("HighlightMatch", bundle: .main)
+    /// Behind the *selected* search hit — the one the navigator scrolls to.
+    static let highlightCurrentMatch = Color("HighlightCurrentMatch", bundle: .main)
+}
+
+/// The corner on a card laid out by hand — recording panels, past-recording
+/// cards, the speech-model rows.
+///
+/// 20pt, the radius the recording screens were already drawing, now in one
+/// place so a new card can't land on a different number. Continuous rather
+/// than circular: the same radius drawn circular turns more abruptly at the
+/// corner, and every card in the app curves the same way only if the style is
+/// pinned here too.
+///
+/// The grouped lists in Settings are the one thing this doesn't cover. Those
+/// cards are drawn by the system at its own (larger) radius, and there is no
+/// API to ask it for a different one — so Settings and its subpages are a
+/// little rounder than the cards here, deliberately.
+enum EchoCard {
+    static let cornerRadius: CGFloat = 20
+    static let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+}
+
+/// Whether the app follows the system appearance or pins itself to light or
+/// dark. Set in Settings → Accessibility, applied once at the app root.
+enum AppearancePreference: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    static let key = "appearancePreference"
+
+    var id: Self { self }
+
+    var label: String {
+        switch self {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
+    }
+
+    /// What to hand `preferredColorScheme` — `nil` means "don't override".
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
 }
 
 /// Where the project lives. Shown as the contact point in the privacy policy
@@ -64,7 +201,7 @@ struct SpeakerTranscriptView: View {
                 let speaker = Text("\(line.speaker): ").bold()
                 Text("\(speaker)\(highlighted(line.text, firstOrdinal: firstOrdinal))")
                     .font(.body)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(EchoPalette.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                     .id(line.id)
             }
@@ -89,8 +226,8 @@ struct SpeakerTranscriptView: View {
             result += AttributedString(text[cursor..<range.lowerBound])
             var match = AttributedString(text[range])
             match.backgroundColor = firstOrdinal + offset == currentMatch
-                ? Color.orange.opacity(0.7)
-                : Color.yellow.opacity(0.4)
+                ? EchoPalette.highlightCurrentMatch
+                : EchoPalette.highlightMatch
             result += match
             cursor = range.upperBound
         }

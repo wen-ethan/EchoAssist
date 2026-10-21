@@ -4,6 +4,11 @@
 //
 //  Implements the "Menu Screen" (Settings) from Figma.
 //
+//  Laid out as an inset-grouped List so it reads like the system Settings app:
+//  controls are grouped by what they affect, and the explanatory copy lives in
+//  each section's footer rather than as a subtitle under every row. Rows use
+//  the same fill as RecordingCard so Settings and Past Recordings match.
+//
 
 import SwiftUI
 
@@ -12,37 +17,21 @@ struct SettingsScreen: View {
     @AppStorage(TextSizePreference.useSystemKey) private var useSystemTextSize = true
     @AppStorage(TextSizePreference.customIndexKey)
     private var customTextSizeIndex = TextSizePreference.defaultIndex
+    @AppStorage(AppearancePreference.key) private var appearance = AppearancePreference.system
     @State private var showOnboarding = false
     private let downloads = ModelDownloadCenter.shared
+    private let translation = TranslationLanguageCenter.shared
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    speechModelsRow
-                    hapticsRow
-                    textSizeRow
-                    exampleBox
-
-                    VStack(spacing: 16) {
-                        NavigationLink {
-                            PrivacyPolicyScreen()
-                        } label: {
-                            Text("Privacy Policy")
-                                .font(.system(.subheadline, weight: .bold))
-                                .underline()
-                                .foregroundStyle(.black)
-                        }
-
-                        onboardingButton
-                        sourceCodeLink
-                    }
-                    .padding(.top, 8)
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
+            List {
+                captionsSection
+                accessibilitySection
+                aboutSection
             }
-            .background(EchoPalette.surface)
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(EchoPalette.surface.ignoresSafeArea())
             .navigationTitle("Settings")
             .sheet(isPresented: $showOnboarding) {
                 OnboardingSheet()
@@ -50,100 +39,221 @@ struct SettingsScreen: View {
         }
     }
 
-    private var speechModelsRow: some View {
-        NavigationLink {
-            ModelDownloadsScreen()
-        } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Speech Models")
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(.black)
-                    Text(downloads.overallSummary)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+    /// Everything that affects a live captioning session. The speech models
+    /// produce the captions; haptics fire only while captions are running, so
+    /// they belong here rather than in a section of their own.
+    private var captionsSection: some View {
+        Section {
+            NavigationLink {
+                ModelDownloadsScreen()
+            } label: {
+                SettingsRow("Speech Models", subtitle: downloads.overallSummary) {
+                    if downloads.isDownloading {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
                 }
-
-                Spacer()
-
-                if downloads.isDownloading {
-                    ProgressView()
-                        .controlSize(.small)
-                }
-                Image(systemName: "chevron.right")
-                    .font(.system(.footnote, weight: .semibold))
-                    .foregroundStyle(.secondary)
             }
+            .onAppear { downloads.refreshFromDisk() }
+
+            NavigationLink {
+                TranslationLanguagesScreen()
+            } label: {
+                SettingsRowLabel("Translation", subtitle: translation.overallSummary)
+            }
+            .task { await translation.refresh() }
+
+            Toggle(isOn: $hapticsEnabled) {
+                SettingsRowLabel("Haptics", subtitle: "Vibrate when switching speakers")
+            }
+            .tint(EchoPalette.primary)
+        } header: {
+            Text("Captions")
         }
-        .onAppear { downloads.refreshFromDisk() }
+        .listRowBackground(EchoPalette.fillSecondary)
     }
 
-    private var hapticsRow: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Haptics")
-                    .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(.black)
-                Text("Vibrates when switching speakers")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+    /// How the app looks rather than what it does: color scheme first, then
+    /// text size. Both are accessibility settings, so they share a section.
+    ///
+    /// One `List` row holding all three controls, with dividers drawn by
+    /// hand, rather than a row each. SwiftUI lays this section's second row
+    /// out a third of a point (one pixel) below where the first one ends —
+    /// only here, not in Captions or About, and regardless of what the rows
+    /// contain, what order they're in, or whether separators are shown. The
+    /// cell clips its background, so that pixel can't be painted over, and it
+    /// shows as a hairline of the page surface straight across the card:
+    /// white in light mode, black in dark. With everything in a single cell
+    /// there is no boundary between rows for the gap to open in.
+    private var accessibilitySection: some View {
+        Section {
+            VStack(spacing: 0) {
+                appearanceRow
+                    .padding(.horizontal, Self.rowInset)
+                    .padding(.vertical, Self.rowPadding)
+
+                rowDivider
+
+                textSizeRow
+                    .padding(.horizontal, Self.rowInset)
+                    .padding(.vertical, Self.rowPadding)
+
+                if !useSystemTextSize {
+                    rowDivider
+
+                    textSizeSlider
+                        .padding(.horizontal, Self.rowInset)
+                        .padding(.vertical, Self.rowPadding)
+                }
             }
-
-            Spacer()
-
-            Toggle("Haptics", isOn: $hapticsEnabled)
-                .labelsHidden()
-                .tint(EchoPalette.primary)
+            .listRowInsets(EdgeInsets())
+        } header: {
+            Text("Accessibility")
         }
+        .listRowBackground(EchoPalette.fillSecondary)
     }
+
+    /// Stands in for the separator a grouped `List` draws between rows.
+    /// Not `Divider()`: that is a hairline, a third of a point, where the
+    /// list's own separator is a full point in a lighter grey — side by side
+    /// with the Captions card the hairline reads as too thin. The tint is
+    /// `textPrimary` at low opacity so it darkens the card in light mode and
+    /// lightens it in dark, which is what the system separator does.
+    private var rowDivider: some View {
+        Rectangle()
+            .fill(EchoPalette.textPrimary.opacity(0.085))
+            .frame(height: 1)
+            .padding(.horizontal, Self.rowInset)
+    }
+
+    /// The insets a grouped `List` would apply to a row, reapplied by hand
+    /// since `accessibilitySection` zeroes them to lay its own rows out.
+    /// Measured off the Captions card so the two match: its two-line rows are
+    /// 67.7pt tall around 38pt of text, and its separators inset 16pt at both
+    /// ends.
+    private static let rowInset: CGFloat = 16
+    private static let rowPadding: CGFloat = 15
 
     private var textSizeRow: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Text Size")
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(.black)
-                    Text(useSystemTextSize
-                        ? "Follows your device's Text Size setting"
-                        : "Custom size, just for EchoAssist")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
+        // Animated at the mutation rather than with `.animation` on the
+        // Section, which would wrap the whole group in an animatable
+        // container for the sake of one row.
+        Toggle(isOn: Binding(
+            get: { useSystemTextSize },
+            set: { newValue in withAnimation { useSystemTextSize = newValue } }
+        )) {
+            SettingsRowLabel(
+                "Use Device Text Size",
+                subtitle: useSystemTextSize
+                    ? "Follows Settings → Accessibility →\nDisplay & Text Size → Larger Text"
+                    : "Custom Size, just for EchoAssist"
+            )
+        }
+        .tint(EchoPalette.primary)
+    }
 
-                Spacer()
-
-                Toggle("Use device text size", isOn: $useSystemTextSize)
-                    .labelsHidden()
-                    .tint(EchoPalette.primary)
-            }
-
-            if !useSystemTextSize {
-                HStack(spacing: 12) {
-                    Text("A")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                    Slider(
-                        value: customSizeSliderValue,
-                        in: 0...Double(TextSizePreference.maxIndex),
-                        step: 1
-                    )
-                    .tint(EchoPalette.primary)
-                    Text("A")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Text(useSystemTextSize
-                ? "Change it in Settings → Accessibility → Display & Text Size "
-                    + "→ Larger Text. The example below shows the result."
-                : "Drag the slider to resize text everywhere in EchoAssist. "
-                    + "The example below shows the result.")
-                .font(.footnote)
+    private var textSizeSlider: some View {
+        HStack(spacing: 12) {
+            Text("A")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
+            Slider(
+                value: customSizeSliderValue,
+                in: 0...Double(TextSizePreference.maxIndex),
+                step: 1
+            )
+            .tint(EchoPalette.primary)
+            Text("A")
+                .font(.system(size: 24, weight: .semibold))
                 .foregroundStyle(.secondary)
         }
-        .animation(.default, value: useSystemTextSize)
+    }
+
+    /// The Appearance dropdown: title and explanation on the left, the
+    /// current choice and the chevrons on the right, and the menu hanging off
+    /// only that trailing pair so it opens from the control rather than from
+    /// the middle of the row.
+    private var appearanceRow: some View {
+        SettingsRow("Appearance", subtitle: "Set light or dark mode") {
+            Menu {
+                Picker("Appearance", selection: $appearance) {
+                    ForEach(AppearancePreference.allCases) { option in
+                        Text(option.label).tag(option)
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                HStack(spacing: 6) {
+                    Text(appearance.label)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(.footnote, weight: .semibold))
+                }
+                // The accent itself, not `.secondary`: that hierarchical
+                // style resolves against the menu button's tint and lands on
+                // a washed-out purple. Naming the color keeps the value the
+                // same purple as the toggles beside it.
+                .foregroundStyle(EchoPalette.primary)
+                // Grows the tap target well past the small text without
+                // moving it: the row is as tall as the two-line title block
+                // either way, and only the leading edge is padded so the
+                // chevrons stay aligned with the toggle below.
+                .padding(.vertical, 8)
+                .padding(.leading, 12)
+                .contentShape(.rect)
+            }
+            .accessibilityLabel("Appearance")
+            .accessibilityValue(appearance.label)
+        }
+    }
+
+    private var aboutSection: some View {
+        Section {
+            NavigationLink {
+                PrivacyPolicyScreen()
+            } label: {
+                Text("Privacy Policy")
+                    .foregroundStyle(EchoPalette.textPrimary)
+            }
+
+            NavigationLink {
+                AcknowledgementsScreen()
+            } label: {
+                Text("Acknowledgements")
+                    .foregroundStyle(EchoPalette.textPrimary)
+            }
+
+            Button {
+                showOnboarding = true
+            } label: {
+                Text("View Onboarding")
+                    .foregroundStyle(EchoPalette.textPrimary)
+            }
+
+            Link(destination: EchoLinks.repository) {
+                HStack {
+                    Text("Source Code on GitHub")
+                        .foregroundStyle(EchoPalette.textPrimary)
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(.footnote, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text("About")
+        } footer: {
+            // The version rides in this section's footer rather than in a
+            // section of its own. An empty `Section` puts a whole section's
+            // spacing above its footer, which left the version marooned far
+            // below the last card; as a real footer it sits the standard
+            // distance under it. From the bundle, so it tracks
+            // MARKETING_VERSION.
+            Text("Version \(appVersion)")
+                .font(.footnote)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 8)
+        }
+        .listRowBackground(EchoPalette.fillSecondary)
     }
 
     private var customSizeSliderValue: Binding<Double> {
@@ -153,43 +263,8 @@ struct SettingsScreen: View {
         )
     }
 
-    /// Live preview of the effective text size — system or custom — so the
-    /// user sees the effect of changing it without leaving Settings.
-    private var exampleBox: some View {
-        Text("Example Text")
-            .font(.system(.body, weight: .semibold))
-            .foregroundStyle(.black)
-            .frame(maxWidth: .infinity, minHeight: 200)
-            .background(EchoPalette.lavender, in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    /// Footer line: the app version, from the bundle so it tracks
-    /// MARKETING_VERSION, next to the link to the project's source.
-    private var sourceCodeLink: some View {
-        HStack(spacing: 6) {
-            Text("Version \(appVersion)")
-            Text("•")
-            Link("Source Code on GitHub", destination: EchoLinks.repository)
-        }
-        .font(.footnote)
-        .foregroundStyle(.secondary)
-    }
-
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
-    }
-
-    private var onboardingButton: some View {
-        Button {
-            showOnboarding = true
-        } label: {
-            Text("View Onboarding")
-                .font(.system(.subheadline))
-                .foregroundStyle(.black)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(EchoPalette.lavender, in: Capsule())
-        }
     }
 }
 

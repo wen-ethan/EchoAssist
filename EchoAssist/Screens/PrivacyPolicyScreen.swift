@@ -12,7 +12,7 @@ import SwiftUI
 
 struct PrivacyPolicyScreen: View {
     /// Shown at the top of the page and updated when the policy text changes.
-    private static let lastUpdated = "August 5, 2026"
+    private static let lastUpdated = "October 21, 2026"
 
     var body: some View {
         ScrollView {
@@ -42,7 +42,7 @@ struct PrivacyPolicyScreen: View {
                             + "transcript is kept."
                     )
                     PolicyText(
-                        "iOS asks for microphone permission before the first recording, and "
+                        "iOS asks for microphone permission the first time you start captions, and "
                             + "you can revoke it any time in Settings → Privacy & Security → "
                             + "Microphone."
                     )
@@ -50,7 +50,7 @@ struct PrivacyPolicyScreen: View {
 
                 PolicySection("What is stored on your device") {
                     PolicyBullet("Saved recordings — the title, date, speaker-labeled transcript, and summary of each session.")
-                    PolicyBullet("Your preferences — haptics, text size, and whether you've seen the onboarding walkthrough.")
+                    PolicyBullet("Your preferences — haptics, text size, appearance, and whether you've seen the onboarding walkthrough.")
                     PolicyBullet("The downloaded speech models (about 800 MB), so captioning works without a network connection.")
                     PolicyBullet("Translations you've generated, cached so switching languages stays instant.")
                     PolicyText(
@@ -148,7 +148,7 @@ struct PrivacyPolicyScreen: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Your conversations stay on your phone.")
                 .font(.system(.title3, weight: .bold))
-                .foregroundStyle(.black)
+                .foregroundStyle(EchoPalette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Text("Last updated \(Self.lastUpdated)")
                 .font(.footnote)
@@ -156,7 +156,7 @@ struct PrivacyPolicyScreen: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(EchoPalette.lavender, in: RoundedRectangle(cornerRadius: 16))
+        .background(EchoPalette.accentContainer, in: RoundedRectangle(cornerRadius: 16))
     }
 }
 
@@ -174,7 +174,7 @@ private struct PolicySection<Content: View>: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.system(.headline, weight: .semibold))
-                .foregroundStyle(.black)
+                .foregroundStyle(EchoPalette.textPrimary)
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)

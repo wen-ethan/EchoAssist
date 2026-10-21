@@ -125,7 +125,10 @@ final class LiveCaptioner {
             // Settings), never as a side effect of Start — so a session only
             // ever pays the load/compile cost here, not an 800 MB fetch.
             guard downloads.allDownloaded else {
-                statusMessage = "Download the speech models first to start captioning."
+                statusMessage =
+                    downloads.hasIncompleteDownload
+                    ? "The model download didn't finish. Resume it to start captioning."
+                    : "Download the speech models first to start captioning."
                 return
             }
             isPreparingModels = true
@@ -292,10 +295,10 @@ struct CurrentRecordingScreen: View {
                     saveRecording()
                 }
             }
-            .alert("Recording Saved", isPresented: $showSavedAlert) {
+            .alert("Transcript Saved", isPresented: $showSavedAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text("Your recording was added to Past Recordings.")
+                Text("Your transcript was added to Past Recordings.")
             }
             .sheet(isPresented: firstRunExplainerShown) {
                 InitialModelDownloadSheet()
@@ -320,7 +323,7 @@ struct CurrentRecordingScreen: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(captioner.isListening ? "Live captions on" : "Live captions off")
                     .font(.headline)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(EchoPalette.textPrimary)
                 Text(headerStatus)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -330,7 +333,7 @@ struct CurrentRecordingScreen: View {
             Spacer()
         }
         .padding(16)
-        .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 20))
+        .background(EchoPalette.fillSecondary, in: EchoCard.shape)
     }
 
     /// The header line tracks the captioner while a session is live or
@@ -369,8 +372,8 @@ struct CurrentRecordingScreen: View {
                     // not-yet-attributed tail appended in a lighter shade so
                     // new speech appears instantly and "solidifies" in place.
                     if let open = captioner.openBlock {
-                        let speaker = Text("\(open.speaker): ").bold().foregroundStyle(.black)
-                        let spoken = Text(open.text).foregroundStyle(.black)
+                        let speaker = Text("\(open.speaker): ").bold().foregroundStyle(EchoPalette.textPrimary)
+                        let spoken = Text(open.text).foregroundStyle(EchoPalette.textPrimary)
                         let pending = Text(captioner.pendingLine.isEmpty ? "" : " \(captioner.pendingLine)")
                             .foregroundStyle(.secondary)
                         Text("\(speaker)\(spoken)\(pending)")
@@ -395,7 +398,7 @@ struct CurrentRecordingScreen: View {
             .padding(20)
             .frame(maxWidth: .infinity, minHeight: 360, alignment: .topLeading)
         }
-        .background(EchoPalette.fillSecondary, in: RoundedRectangle(cornerRadius: 20))
+        .background(EchoPalette.fillSecondary, in: EchoCard.shape)
     }
 
     /// The one primary button, by state: Stop while listening; a locked
@@ -412,11 +415,16 @@ struct CurrentRecordingScreen: View {
         } else if downloads.isDownloading {
             lockedButton("Downloading models…")
         } else if !downloads.allDownloaded {
-            actionButton("Download Models", icon: "arrow.down.circle.fill", tint: EchoPalette.primary) {
+            actionButton(
+                downloads.hasIncompleteDownload ? "Resume Download" : "Download Models",
+                icon: downloads.hasIncompleteDownload
+                    ? "arrow.clockwise.circle.fill" : "arrow.down.circle.fill",
+                tint: EchoPalette.primaryFill
+            ) {
                 downloads.showFirstRunExplainer = true
             }
         } else {
-            actionButton("Start", icon: "mic.fill", tint: EchoPalette.primary) {
+            actionButton("Start", icon: "mic.fill", tint: EchoPalette.primaryFill) {
                 captioner.toggleListening()
             }
         }
@@ -429,7 +437,7 @@ struct CurrentRecordingScreen: View {
             Label(title, systemImage: icon)
                 .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.glassProminent)
         .controlSize(.large)
         .tint(tint)
     }
@@ -444,9 +452,9 @@ struct CurrentRecordingScreen: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.glassProminent)
         .controlSize(.large)
-        .tint(EchoPalette.primary)
+        .tint(EchoPalette.primaryFill)
         .disabled(true)
     }
 }
