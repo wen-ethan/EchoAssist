@@ -215,6 +215,13 @@ struct SettingsScreen: View {
                     .foregroundStyle(EchoPalette.textPrimary)
             }
 
+            NavigationLink {
+                AcknowledgementsScreen()
+            } label: {
+                Text("Acknowledgements")
+                    .foregroundStyle(EchoPalette.textPrimary)
+            }
+
             Button {
                 showOnboarding = true
             } label: {

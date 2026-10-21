@@ -2,13 +2,13 @@
 //  RecordingCard.swift
 //  EchoAssist
 //
-//  A reusable card representing a single saved lecture/recording.
+//  A reusable card representing a single saved recording's transcript.
 //
 
 import SwiftUI
 
 /// A rounded card showing a recording's title and AI-generated summary.
-/// Call this once per saved lecture a user has.
+/// Call this once per saved recording a user has.
 struct RecordingCard: View {
     let recording: Recording
 

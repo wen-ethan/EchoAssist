@@ -295,10 +295,10 @@ struct CurrentRecordingScreen: View {
                     saveRecording()
                 }
             }
-            .alert("Recording Saved", isPresented: $showSavedAlert) {
+            .alert("Transcript Saved", isPresented: $showSavedAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text("Your recording was added to Past Recordings.")
+                Text("Your transcript was added to Past Recordings.")
             }
             .sheet(isPresented: firstRunExplainerShown) {
                 InitialModelDownloadSheet()

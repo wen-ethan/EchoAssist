@@ -30,7 +30,7 @@ private let onboardingPages: [OnboardingPage] = [
         media: .appIcon,
         title: "Welcome to EchoAssist",
         message: "Live captions for real-world conversations, entirely on your "
-            + "device. Nothing you record ever leaves your phone."
+            + "device. Audio is never saved, and transcripts never leave your phone."
     ),
     OnboardingPage(
         media: .demo(asset: "OnboardingTranscribe", symbol: "mic.fill"),

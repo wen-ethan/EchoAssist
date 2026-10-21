@@ -42,7 +42,7 @@ struct PrivacyPolicyScreen: View {
                             + "transcript is kept."
                     )
                     PolicyText(
-                        "iOS asks for microphone permission before the first recording, and "
+                        "iOS asks for microphone permission the first time you start captions, and "
                             + "you can revoke it any time in Settings → Privacy & Security → "
                             + "Microphone."
                     )
