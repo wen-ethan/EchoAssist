@@ -12,7 +12,7 @@ import SwiftUI
 
 struct PrivacyPolicyScreen: View {
     /// Shown at the top of the page and updated when the policy text changes.
-    private static let lastUpdated = "August 5, 2026"
+    private static let lastUpdated = "October 21, 2026"
 
     var body: some View {
         ScrollView {
@@ -50,7 +50,7 @@ struct PrivacyPolicyScreen: View {
 
                 PolicySection("What is stored on your device") {
                     PolicyBullet("Saved recordings — the title, date, speaker-labeled transcript, and summary of each session.")
-                    PolicyBullet("Your preferences — haptics, text size, and whether you've seen the onboarding walkthrough.")
+                    PolicyBullet("Your preferences — haptics, text size, appearance, and whether you've seen the onboarding walkthrough.")
                     PolicyBullet("The downloaded speech models (about 800 MB), so captioning works without a network connection.")
                     PolicyBullet("Translations you've generated, cached so switching languages stays instant.")
                     PolicyText(
