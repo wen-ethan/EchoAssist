@@ -192,6 +192,20 @@ struct InitialModelDownloadSheet: View {
     private let downloads = ModelDownloadCenter.shared
 
     var body: some View {
+        // Laid out as-is wherever it fits; on a short screen (an iPhone in
+        // landscape) the same content scrolls instead of running off the
+        // top and bottom of the sheet.
+        ViewThatFits(in: .vertical) {
+            content
+            ScrollView {
+                content
+            }
+        }
+        .presentationDetents([.large])
+        .presentationBackground(EchoPalette.surface)
+    }
+
+    private var content: some View {
         VStack(spacing: 20) {
             Image(systemName: "arrow.down.circle")
                 .font(.system(size: 44))
@@ -210,6 +224,7 @@ struct InitialModelDownloadSheet: View {
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
 
             VStack(spacing: 10) {
                 ForEach(SpeechModel.allCases) { model in
@@ -221,6 +236,7 @@ struct InitialModelDownloadSheet: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
             if !downloads.allDownloaded && !downloads.isDownloading {
                 Button {
@@ -253,8 +269,6 @@ struct InitialModelDownloadSheet: View {
             }
         }
         .padding(24)
-        .presentationDetents([.large])
-        .presentationBackground(EchoPalette.surface)
     }
 
     private var footnote: String {
