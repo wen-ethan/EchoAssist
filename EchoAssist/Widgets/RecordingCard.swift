@@ -11,6 +11,9 @@ import SwiftUI
 /// Call this once per saved recording a user has.
 struct RecordingCard: View {
     let recording: Recording
+    /// Whether this is the recording open beside the list. Tinted with the
+    /// same accent wash that marks the open page in the Settings sidebar.
+    var isSelected = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -35,7 +38,10 @@ struct RecordingCard: View {
         .frame(maxWidth: .infinity, minHeight: 86, alignment: .leading)
         .padding(.horizontal, 17)
         .padding(.vertical, 14)
-        .background(EchoPalette.fillSecondary, in: EchoCard.shape)
+        .background(
+            isSelected ? EchoPalette.accentContainer : EchoPalette.fillSecondary,
+            in: EchoCard.shape
+        )
     }
 }
 

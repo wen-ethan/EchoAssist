@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "AppIcon_Small.png",
+      "filename" : "AppIcon-iOS-Default-128@3x.png",
       "idiom" : "universal"
     }
   ],

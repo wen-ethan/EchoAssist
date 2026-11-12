@@ -108,7 +108,11 @@ struct OnboardingSheet: View {
             .foregroundStyle(.secondary)
             .padding(.top, 12)
             .padding(.bottom, 16)
+            // Hidden rather than removed so the layout doesn't jump on the
+            // last page — but also out of reach of taps and VoiceOver.
             .opacity(isLastPage ? 0 : 1)
+            .disabled(isLastPage)
+            .accessibilityHidden(isLastPage)
         }
         .padding(.top, 24)
         .presentationDetents([.large])
@@ -132,37 +136,68 @@ struct OnboardingSheet: View {
 
 private struct OnboardingPageView: View {
     let page: OnboardingPage
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     var body: some View {
-        VStack(spacing: 20) {
-            switch page.media {
-            case .appIcon:
-                Image("AppIconSmall")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 120, height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 27))
-                    .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 440)
-            case .demo(let asset, let symbol):
-                OnboardingMedia(assetName: asset, fallbackSymbol: symbol)
+        if verticalSizeClass == .compact {
+            // Short screen (an iPhone in landscape): media beside the text,
+            // so it keeps the page's full height instead of shrinking to a
+            // thumbnail above it.
+            HStack(spacing: 24) {
+                media
+                VStack(spacing: 20) {
+                    text
+                }
+                .frame(maxWidth: .infinity)
             }
-
-            Text(page.title)
-                .font(.title2.bold())
-                .foregroundStyle(EchoPalette.textPrimary)
-                .multilineTextAlignment(.center)
-
-            Text(page.message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            Spacer(minLength: 0)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
+        } else {
+            VStack(spacing: 20) {
+                media
+                    .layoutPriority(1)
+                text
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 16)
+    }
+
+    @ViewBuilder
+    private var media: some View {
+        switch page.media {
+        case .appIcon:
+            Image("AppIconSmall")
+                .resizable()
+                .scaledToFit()
+                // A ceiling, not a fixed size, so a short page shrinks the
+                // icon rather than clipping it.
+                .frame(maxWidth: 120, maxHeight: 120)
+                .clipShape(RoundedRectangle(cornerRadius: 27))
+                .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
+                .frame(maxWidth: .infinity, maxHeight: OnboardingMedia.maxHeight)
+        case .demo(let asset, let symbol):
+            OnboardingMedia(assetName: asset, fallbackSymbol: symbol)
+        }
+    }
+
+    /// Fixed vertically so the text always gets its full wrapped height;
+    /// otherwise the media's layout priority would squeeze it down to one
+    /// truncated line. Only the media gives way.
+    @ViewBuilder
+    private var text: some View {
+        Text(page.title)
+            .font(.title2.bold())
+            .foregroundStyle(EchoPalette.textPrimary)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+
+        Text(page.message)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -172,6 +207,15 @@ private struct OnboardingPageView: View {
 private struct OnboardingMedia: View {
     let assetName: String
     let fallbackSymbol: String
+
+    /// The media's height when there's room for it. It's a ceiling rather
+    /// than a fixed size: a short sheet (a phone or the iPhone Duo held
+    /// sideways, an iPad in landscape) shrinks the media to fit instead of
+    /// clipping the title, message, and buttons below it. Each page gives
+    /// its media layout priority so it takes the free space ahead of the
+    /// trailing Spacer (the text is fixed to its full height, so it isn't
+    /// what gets squeezed), and the video keeps its aspect ratio.
+    static let maxHeight: CGFloat = 440
 
     private var videoURL: URL? {
         Bundle.main.url(forResource: assetName, withExtension: "mp4")
@@ -207,8 +251,7 @@ private struct OnboardingMedia: View {
                     }
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 440)
+        .frame(maxWidth: .infinity, maxHeight: Self.maxHeight)
     }
 }
 

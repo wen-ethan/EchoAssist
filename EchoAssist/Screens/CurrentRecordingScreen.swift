@@ -215,7 +215,17 @@ struct CurrentRecordingScreen: View {
     @Environment(RecordingStore.self) private var store
     @State private var captioner = LiveCaptioner()
     @State private var showSavedAlert = false
+    /// Status and controls in one row under the captions whenever the screen
+    /// is landscape. See `onSplitLayoutChange`.
+    @State private var usesSplitLayout = false
     private let downloads = ModelDownloadCenter.shared
+
+    /// Stacked like a phone, or — wide and landscape, where height is the
+    /// scarce dimension — status and the button sharing a row beneath the
+    /// captions.
+    private var arrangement: RecordingScreenLayout.Arrangement {
+        usesSplitLayout ? .row : .stacked
+    }
 
     /// Saves the captioned lines as a new recording, confirms with a
     /// popup, then clears the transcript after a short delay.
@@ -267,13 +277,21 @@ struct CurrentRecordingScreen: View {
                 EchoPalette.surface
                     .ignoresSafeArea()
 
-                VStack(spacing: 18) {
+                // One layout for every shape, so the same three views move
+                // between arrangements instead of being swapped out; an
+                // unfold or rotation then glides into place like the split
+                // views on the other tabs rather than cutting.
+                RecordingScreenLayout(arrangement: arrangement, spacing: 18) {
                     header
                     captionDisplay
                     controls
                 }
                 .padding()
+                .animation(.smooth, value: arrangement)
             }
+            // Any landscape screen, not only wide ones: the row fits at any
+            // width, and an iPhone on its side is where height runs out.
+            .onSplitLayoutChange($usesSplitLayout, requiresRegularWidth: false)
             .navigationTitle("EchoAssist")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -396,7 +414,7 @@ struct CurrentRecordingScreen: View {
                 }
             }
             .padding(20)
-            .frame(maxWidth: .infinity, minHeight: 360, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .background(EchoPalette.fillSecondary, in: EchoCard.shape)
     }
@@ -456,6 +474,80 @@ struct CurrentRecordingScreen: View {
         .controlSize(.large)
         .tint(EchoPalette.primaryFill)
         .disabled(true)
+    }
+}
+
+/// Places the recording screen's three subviews — status card, captions, and
+/// controls, in that order — in either arrangement. A single `Layout` rather
+/// than an `if` between stacks keeps each view's identity across a change,
+/// so an animated arrangement change moves and resizes them in place.
+struct RecordingScreenLayout: Layout {
+    enum Arrangement: Equatable {
+        /// Status on top, captions filling the middle, controls at the bottom.
+        case stacked
+        /// Captions filling the top; beneath them one row with the status on
+        /// the leading side and the controls taking `controlsFraction` of
+        /// the width on the trailing side.
+        case row
+    }
+
+    /// The share of the row's width the controls get in `.row`.
+    private let controlsFraction: CGFloat = 1 / 3
+
+    var arrangement: Arrangement
+    var spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        // Fills whatever it's offered, like the stacks it replaces.
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard subviews.count == 3 else { return }
+        let (status, captions, controls) = (subviews[0], subviews[1], subviews[2])
+
+        switch arrangement {
+        case .stacked:
+            let width = bounds.width
+            let statusHeight = status.sizeThatFits(ProposedViewSize(width: width, height: nil)).height
+            let controlsHeight = controls.sizeThatFits(ProposedViewSize(width: width, height: nil)).height
+            let captionsHeight = max(0, bounds.height - statusHeight - controlsHeight - 2 * spacing)
+
+            status.place(
+                at: CGPoint(x: bounds.minX, y: bounds.minY),
+                proposal: ProposedViewSize(width: width, height: statusHeight))
+            captions.place(
+                at: CGPoint(x: bounds.minX, y: bounds.minY + statusHeight + spacing),
+                proposal: ProposedViewSize(width: width, height: captionsHeight))
+            controls.place(
+                at: CGPoint(x: bounds.minX, y: bounds.maxY),
+                anchor: .bottomLeading,
+                proposal: ProposedViewSize(width: width, height: controlsHeight))
+
+        case .row:
+            let rowWidth = bounds.width - spacing
+            let controlsWidth = rowWidth * controlsFraction
+            let statusWidth = rowWidth - controlsWidth
+            let statusHeight = status.sizeThatFits(ProposedViewSize(width: statusWidth, height: nil)).height
+            let controlsHeight = controls.sizeThatFits(ProposedViewSize(width: controlsWidth, height: nil)).height
+            // The row is as tall as its taller member; both sit on its
+            // midline.
+            let rowHeight = max(statusHeight, controlsHeight)
+            let rowMidY = bounds.maxY - rowHeight / 2
+
+            captions.place(
+                at: CGPoint(x: bounds.minX, y: bounds.minY),
+                proposal: ProposedViewSize(
+                    width: bounds.width, height: max(0, bounds.height - rowHeight - spacing)))
+            status.place(
+                at: CGPoint(x: bounds.minX, y: rowMidY),
+                anchor: .leading,
+                proposal: ProposedViewSize(width: statusWidth, height: statusHeight))
+            controls.place(
+                at: CGPoint(x: bounds.maxX, y: rowMidY),
+                anchor: .trailing,
+                proposal: ProposedViewSize(width: controlsWidth, height: controlsHeight))
+        }
     }
 }
 
