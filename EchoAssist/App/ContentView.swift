@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// hi guys
+
 struct ContentView: View {
     private enum AppTab {
         case settings, recording, pastRecordings
