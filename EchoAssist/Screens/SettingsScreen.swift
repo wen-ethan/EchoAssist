@@ -19,24 +19,121 @@ struct SettingsScreen: View {
     private var customTextSizeIndex = TextSizePreference.defaultIndex
     @AppStorage(AppearancePreference.key) private var appearance = AppearancePreference.system
     @State private var showOnboarding = false
+    /// Settings beside the open page, like the iPad Settings app, rather than
+    /// the page pushed over Settings. See `onSplitLayoutChange`.
+    @State private var usesSplitLayout = false
+    /// The last page opened. Shared by both layouts so a rotation or a fold
+    /// keeps the same page in front.
+    @State private var selectedPage: SettingsPage?
+    /// Whether that page is pushed over Settings when only one fits. Kept
+    /// apart from the selection so side by side there's always a page shown,
+    /// even after the user has backed out of it on a narrower screen.
+    @State private var isShowingPage = false
     private let downloads = ModelDownloadCenter.shared
     private let translation = TranslationLanguageCenter.shared
 
+    /// The subpages Settings leads to.
+    private enum SettingsPage: Hashable {
+        case speechModels, translation, privacyPolicy, acknowledgements
+    }
+
+    /// Side by side the detail column is never empty: until something is
+    /// picked it shows the first page, the way the iPad Settings app does.
+    private var displayedPage: SettingsPage {
+        selectedPage ?? .speechModels
+    }
+
     var body: some View {
-        NavigationStack {
-            List {
-                captionsSection
-                accessibilitySection
-                aboutSection
-            }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(EchoPalette.surface.ignoresSafeArea())
-            .navigationTitle("Settings")
-            .sheet(isPresented: $showOnboarding) {
-                OnboardingSheet()
+        Group {
+            if usesSplitLayout {
+                NavigationSplitView {
+                    settingsList
+                } detail: {
+                    page(displayedPage)
+                }
+            } else {
+                NavigationStack(path: stackPath) {
+                    settingsList
+                        .navigationDestination(for: SettingsPage.self, destination: page)
+                }
             }
         }
+        // Side by side on iPad, the split view starts below the floating tab
+        // bar rather than running under it, leaving the window's default
+        // background showing above it. Fill that strip with the surface too.
+        .background(EchoPalette.surface.ignoresSafeArea())
+        .onSplitLayoutChange($usesSplitLayout)
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingSheet()
+        }
+    }
+
+    private var settingsList: some View {
+        List {
+            captionsSection
+            accessibilitySection
+            aboutSection
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(EchoPalette.surface.ignoresSafeArea())
+        .navigationTitle("Settings")
+    }
+
+    /// A row that opens one of the Settings pages. Pushed, it's a regular
+    /// NavigationLink with its chevron. Side by side it's a plain Button that
+    /// swaps the detail column's page, deliberately not `List(selection:)`:
+    /// on iPad a selected sidebar cell gets a square focus ring that ignores
+    /// the card's rounded corners and turns `.secondary` subtitles white, and
+    /// neither can be switched off from SwiftUI. `rowBackground` marks the
+    /// open page instead.
+    @ViewBuilder
+    private func pageLink<Label: View>(
+        _ page: SettingsPage,
+        @ViewBuilder label: () -> Label
+    ) -> some View {
+        if usesSplitLayout {
+            Button {
+                selectedPage = page
+                isShowingPage = true
+            } label: {
+                label()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .listRowBackground(rowBackground(for: page))
+        } else {
+            NavigationLink(value: page, label: label)
+                .listRowBackground(rowBackground(for: page))
+        }
+    }
+
+    @ViewBuilder
+    private func page(_ page: SettingsPage) -> some View {
+        switch page {
+        case .speechModels: ModelDownloadsScreen()
+        case .translation: TranslationLanguagesScreen()
+        case .privacyPolicy: PrivacyPolicyScreen()
+        case .acknowledgements: AcknowledgementsScreen()
+        }
+    }
+
+    private var stackPath: Binding<[SettingsPage]> {
+        Binding(
+            get: { isShowingPage ? [displayedPage] : [] },
+            set: { path in
+                if let page = path.last { selectedPage = page }
+                isShowingPage = !path.isEmpty
+            }
+        )
+    }
+
+    /// Side by side, the open page's row is marked with the accent wash.
+    private func rowBackground(for page: SettingsPage) -> Color {
+        usesSplitLayout && page == displayedPage
+            ? EchoPalette.accentContainer
+            : EchoPalette.fillSecondary
     }
 
     /// Everything that affects a live captioning session. The speech models
@@ -44,9 +141,7 @@ struct SettingsScreen: View {
     /// they belong here rather than in a section of their own.
     private var captionsSection: some View {
         Section {
-            NavigationLink {
-                ModelDownloadsScreen()
-            } label: {
+            pageLink(.speechModels) {
                 SettingsRow("Speech Models", subtitle: downloads.overallSummary) {
                     if downloads.isDownloading {
                         ProgressView()
@@ -56,9 +151,7 @@ struct SettingsScreen: View {
             }
             .onAppear { downloads.refreshFromDisk() }
 
-            NavigationLink {
-                TranslationLanguagesScreen()
-            } label: {
+            pageLink(.translation) {
                 SettingsRowLabel("Translation", subtitle: translation.overallSummary)
             }
             .task { await translation.refresh() }
@@ -89,24 +182,25 @@ struct SettingsScreen: View {
         Section {
             VStack(spacing: 0) {
                 appearanceRow
-                    .padding(.horizontal, Self.rowInset)
                     .padding(.vertical, Self.rowPadding)
 
                 rowDivider
 
                 textSizeRow
-                    .padding(.horizontal, Self.rowInset)
                     .padding(.vertical, Self.rowPadding)
 
                 if !useSystemTextSize {
                     rowDivider
 
                     textSizeSlider
-                        .padding(.horizontal, Self.rowInset)
-                        .padding(.vertical, Self.rowPadding)
+                            .padding(.vertical, Self.rowPadding)
                 }
             }
-            .listRowInsets(EdgeInsets())
+            // Only the vertical insets are zeroed, since each row pads
+            // itself to a standard row's height. The horizontal ones stay
+            // the List's own — wider on iPad than iPhone — so this card's
+            // text and dividers line up with the other sections'.
+            .listRowInsets(.vertical, 0)
         } header: {
             Text("Accessibility")
         }
@@ -123,15 +217,12 @@ struct SettingsScreen: View {
         Rectangle()
             .fill(EchoPalette.textPrimary.opacity(0.085))
             .frame(height: 1)
-            .padding(.horizontal, Self.rowInset)
     }
 
-    /// The insets a grouped `List` would apply to a row, reapplied by hand
-    /// since `accessibilitySection` zeroes them to lay its own rows out.
+    /// The vertical inset a grouped `List` would apply to a row, reapplied by
+    /// hand since `accessibilitySection` zeroes it to lay its own rows out.
     /// Measured off the Captions card so the two match: its two-line rows are
-    /// 67.7pt tall around 38pt of text, and its separators inset 16pt at both
-    /// ends.
-    private static let rowInset: CGFloat = 16
+    /// 67.7pt tall around 38pt of text.
     private static let rowPadding: CGFloat = 15
 
     private var textSizeRow: some View {
@@ -208,16 +299,12 @@ struct SettingsScreen: View {
 
     private var aboutSection: some View {
         Section {
-            NavigationLink {
-                PrivacyPolicyScreen()
-            } label: {
+            pageLink(.privacyPolicy) {
                 Text("Privacy Policy")
                     .foregroundStyle(EchoPalette.textPrimary)
             }
 
-            NavigationLink {
-                AcknowledgementsScreen()
-            } label: {
+            pageLink(.acknowledgements) {
                 Text("Acknowledgements")
                     .foregroundStyle(EchoPalette.textPrimary)
             }

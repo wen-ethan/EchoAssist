@@ -114,7 +114,7 @@ struct IndividualRecordingScreen: View {
         // color extends behind the keyboard and it reads as glass floating
         // over the content instead of sitting in a grey slab.
         .background(EchoPalette.surface.ignoresSafeArea())
-        .safeAreaInset(edge: .bottom) {
+        .safeAreaBar(edge: .bottom) {
             // While searching, the bottom bar becomes the match navigator —
             // like Safari's find-on-page bar replacing the toolbar.
             if searchTerm.isEmpty {
